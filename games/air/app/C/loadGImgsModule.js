@@ -136,7 +136,7 @@ define(["app/C/Progress"], function ( Progress ) {
             }
 
         /* Append Canvas */
-//document.body.appendChild(c);
+        //document.body.appendChild(c);
 
         /* Set Constant Properties */
         ctx.shadowBlur = circle.blur;
@@ -164,6 +164,18 @@ define(["app/C/Progress"], function ( Progress ) {
 
         var gif = loadingGif( canvas );
         var progress = new Progress();
+        var percent = 0;
+        var timer = setInterval(function() {
+            context.save();
+            g();
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle="#ECF0F1";
+            context.font = "40px Arial";
+            context.fillStyle = "#7F8C8D";
+            context.fillText(parseInt(percent*100)+"%",130,200);
+
+            context.restore();
+        },30);
 
         //为进度条添加两个自定义事件;
         progress.addListener("done", function(type, imgs) {
@@ -172,23 +184,14 @@ define(["app/C/Progress"], function ( Progress ) {
             //把图片加载放到一个对象里, 作为缓存;
             window.gb && ( window.gb.imgs = imgs );
             console.log("done");
+            clearInterval(timer);
+
             callback&&callback();
 
         });
 
         progress.addListener("load", function ( type, per ) {
-
-            context.save();
-
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            gif();
-            context.fillStyle="#ECF0F1";
-            context.font = "40px Arial";
-            context.fillStyle = "#7F8C8D";
-            context.fillText(parseInt(per*100)+"%",130,200);
-
-            context.restore();
-
+            percent = per;
         });
 
         progress.load( window.gb.users );
