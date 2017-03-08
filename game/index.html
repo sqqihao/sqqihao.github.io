@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="lib/Tiny-Alert/css/zepto.alert.css"/>
+    <script src="zepto.js"></script>
+    <script src="lib/Tiny-Alert/js/zepto.alert.js"></script>
+    <script src="handlebars.js"></script>
+</head>
+<style>
+    body{
+        margin:0;
+        -webkit-tap-highlight-color:transparent;
+        -webkit-user-select:none;
+    }
+    @font-face {
+        font-family:"qiqi";
+        src:url("Qiqi.ttf");
+    }
+    table{
+        font-family: "qiqi";
+        border-collapse: collapse;
+        text-align: center;
+        font-size:small;;
+        margin:10px auto;
+    }
+    td{
+        border-left:1px solid #eee;
+        border-top:1px solid #eee;
+    }
+    tr{
+        border-right:1px solid #eee;
+        border-bottom:1px solid #eee;
+        cursor:pointer;
+    }
+    span{
+        display: inline-block;
+        *display: block;
+        *zoom:1;
+        *display: inline;
+        width:100%;
+        line-height: 1;
+    }
+    .cat{
+        background:url("cat.png");
+        height:100%;
+        background-size: 100% 100%;
+    }
+    td.shadow{
+        background: #74d5db;
+    }
+    td.maskCat{
+        background-color: #ffffff;
+        background-image: url("cat.jpg");
+        background-size: 100% 100%;
+    }
+    td.shadow span{
+        display:none;
+    }
+</style>
+<body>
+<div id="select" class="align-center">
+    <div class="container">
+        <div class="row">
+            <h2>
+                <p class="text-primary"> 请选择游戏难度 ....</p>
+            </h2>
+            <button type="button" class="btn btn-info  level0"  onclick="start(2,2)">很简单</button>
+            <button type="button" class="btn btn-primary  level1"  onclick="start(6,6)">简单</button>
+            <button type="button" class="btn btn-default  level2"  onclick="start(8,8)">中等</button>
+            <button type="button" class="btn btn-warning  level3"  onclick="start(12,12)">高级</button>
+            <button type="button" class="btn btn-success  level4"  onclick="start(20,20)">难</button>
+        </div>
+    </div>
+</div>
+
+<div id="help">
+    <div class="container">
+        <div class="row">
+            <br>
+            <button id="toGameBlock" class="btn btd-info">返回</button>
+            <p class="text-primary">
+                <a href="scores.html">
+                    分数排名列表
+                </a>
+            </p>
+            <h4>
+                这个是有关的帮助信息;
+            </h4>
+            <p>
+                几个原则很简单。首先 你可以随便选择一个蓝色的格子.
+            </p>
+            <p>
+                如果你点到了<big>喵</big>，那么说明你人品不行，那么系统会提示重新开始。<br>
+                如果你点到了方块变成了数字, 这个数字最小是1，最大是8， 意思是附近的8个格子中隐藏了显示数字的<big>喵</big>; 然后继续猜<br>
+                然后你可以把全部的<big>喵</big>找出来;
+            <p class="text-info">
+                每一次都有<big>16</big>个机会可以使用天降神喵;<br>
+            </p>
+            </p>
+            <p class="text-danger">
+                我的技术博客地址：<a href="http://www.cnblogs.com/diligenceday/">打开</a><br>
+                github项目地址:<a href="https://github.com/sqqihao">打开</a><br>
+                sina主页<a href="http://1.keepu.sinaapp.com/">打开</a>
+            </p>
+            <p>
+                bugs:谢谢燕子同学提的bug.thanks;
+            </p>
+        </div>
+    </div>
+</div>
+
+<div id="use-module" class="container">
+    <div class="row">
+        <div class="col-xs-2">
+            <div id="to-select">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true">
+                    <a href="###"> 返回选择关卡</a>
+                </span>
+            </div>
+        </div>
+        <div class="col-xs-8">
+            <p class="text-primary">
+                <button class="btn btn-primary" id="use">
+                    使用天降神猫
+                </button>还有<span class="badge" style="width:40px" id="canUse">16</span>次使用天降神猫的机会;
+                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;您的得分:
+                <a  id="score" style="font-size:40px">
+                    0
+                </a>
+            </p>
+        </div>
+        <div class="col-xs-2">
+            <span class="glyphicon glyphicon-minus" aria-hidden="true" id="to-help">
+                <a href="###">查看帮助</a>
+            </span>
+        </div>
+    </div>
+</div>
+
+<table id="game">
+    <tbody id="tbody">
+        <tr>
+            <td>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<script id="tpl" type="text/x-handlebars-template">
+    {{#defaultY}}{{/defaultY}}
+    {{#each this}}
+    <tr>
+        {{#each this}}
+        <td width="{{#width}}{{/width}}" height="{{#height}}{{/height}}" class="shadow" id="{{@index}}-{{#y}}{{/y}}">
+            {{#if this}}
+            <span class="cat"></span>
+            {{else}}
+            <span class="null">{{#getNumber @index}}{{/getNumber}}</span>
+            {{/if}}
+        </td>
+        {{/each}}
+        {{#addY}}{{/addY}}
+    </tr>
+    {{/each}}
+</script>
+
+<script>
+    var cfg = {
+        width : 10,
+        height : 10,
+        el : document.getElementById("tbody")
+    };
+
+    (function(){
+        Handlebars.registerHelper("inc",function(index) {
+            if( typeof index === "string" )
+                return index+1;
+        });
+        Handlebars.registerHelper("width",function(index) {
+            return (100/cfg.width) + "%";
+        });
+        Handlebars.registerHelper("height",function(index) {
+            return (100/cfg.height) + "%";
+        });
+        //利用闭包保存信息;
+        var y = 0;
+        Handlebars.registerHelper("defaultY", function(){
+            y = 0;
+        });
+        Handlebars.registerHelper("addY",function(index) {
+            y++;
+        });
+        Handlebars.registerHelper("y",function(index) {
+            return y;
+        });
+        Handlebars.registerHelper("getNumber",function(x) {
+            var data = G.data.mapData.get();
+            var arr = [
+                [x-1,y-1], [x,y-1], [x+1,y-1],
+                [x-1,y],   [x,y],   [x+1,y],
+                [x-1,y+1], [x,y+1], [x+1,y+1]
+            ];
+            var result = 0;
+            for(var i=0 ; i<arr.length; i++) {
+                //坑爹啊， 要先获取_y然后在_y的基础上获取_x;
+                var _x = arr[i][0];
+                var _y = arr[i][1];
+                if(data[_y]&&(data[_y][_x])&&(data[_y][_x] === 1)) {
+                    result++;
+                };
+            };
+            return result;
+        });
+    })();
+</script>
+
+<script>
+    var G = {
+        tpl : Handlebars.compile( document.getElementById("tpl").innerHTML ),
+        el : cfg.el
+    };
+    //游戏主模块
+    (function (G) {
+
+        //MAP module
+        (function(G) {
+            G.map = {
+                //return HTML
+                mapView : function( data, el ) {
+                    var data = data || [[0,0,1,0,1,0,1,0,1,1],[1,0,0,1,0,0,1,0,0,1],[1,1,0,0,1,0,1,1,1,0],[1,0,1,0,1,0,1,1,1,0],[1,1,1,0,0,1,1,1,1,1],[1,1,0,1,1,1,0,0,0,1],[0,0,0,1,0,0,0,1,1,1],[0,1,0,0,1,0,0,0,1,1],[1,1,1,0,0,0,1,1,0,0],[1,1,1,1,0,1,0,1,0,1]];
+                    (G.el || el).innerHTML = G.tpl(data);
+                },
+                //return HTML
+                mapSetShowArea : function( data ) {
+                },
+                removeClass : function(arr) {
+                    var len = arr.length;
+                    while( len-- ) {
+                        var id = arr[len];
+                        document.getElementById( id.join("-") ).className = "";
+                    };
+                }
+            };
+        })(G);
+
+        //DATA module
+        (function(G) {
+            G.data = {
+                //利用闭包保存数据
+                mapData : (function() {
+                    var result = [];
+                    return {
+                        set : function(data) {
+                            result = data;
+                            return data;
+                        },
+                        init : function() {
+                            result = [];
+                        },
+                        get : function() {
+                            return result;
+                        },
+                        newData : function(width, height) {
+                            result = [];
+                            for(var i= 0; i<width; i++) {
+                                var tr = [];
+                                for(var j=0; j<height; j++) {
+                                    tr.push( Math.round(Math.random()) );
+                                };
+                                result.push(tr);
+                            };
+                            return result;
+                        }
+                    };
+                })(),
+
+                areaData : (function() {
+                    var  areaData = new Array(cfg.height);
+                    var calculateXY = function(x,y) {
+                        return [Math.min(cfg.width-1,Math.max(0,x)),Math.min(cfg.height-1,Math.max(0,y))];
+                    };
+                    return {
+                        get : function() {
+
+                        },
+                        set : function(id) {
+                            id = [ parseInt(id[0]), parseInt(id[1])];
+                            var data = this.get();
+                            var arrId = [];
+                            //三个X轴不变
+                            arrId.push( calculateXY(id[0]-1, id[1]-1) );
+                            arrId.push( calculateXY(id[0], id[1]-1) );
+                            arrId.push( calculateXY(id[0]+1, id[1]-1) );
+
+                            arrId.push( calculateXY(id[0]-1, id[1]) );
+                            arrId.push( calculateXY(id[0], id[1]) );
+                            arrId.push( calculateXY(id[0]+1, id[1]) );
+
+                            arrId.push( calculateXY(id[0]-1, id[1]+1) );
+                            arrId.push( calculateXY(id[0], id[1]+1) );
+                            arrId.push( calculateXY(id[0]+1, id[1]+1) );
+                            G.map.removeClass( arrId );
+                        }
+                    };
+                })()
+            };
+        })(G);
+
+        //EVENT module
+        (function(G) {
+            G.event = {
+                bind : function() {
+                    //界面变化事件;
+                    window.onresize = this.resize;
+                    this.resize();
+                    window.click = function(ev) {
+                        var ev = ev || window.event;
+                        var target = ev.target;
+                        var cat;
+                        if(target&&(target.tagName.toLowerCase() === "td")&&(target.className==="shadow")) {
+                            G.data.areaData.set( target.id.split("-") );
+                            if(cat = target.getElementsByClassName("cat")[0]) {
+                                G.event.alert("你点到猫拉!您的得分是: "+ document.getElementById("score").innerHTML);
+                            }else{
+                                var el = document.getElementById("score");
+                                el.innerHTML = parseInt(el.innerHTML)+1;
+                            };
+                        };
+                    };
+                    var contextmenu = function(ev) {
+                        var ev = ev || window.event;
+                        var target = ev.target;
+                        ev.preventDefault&&ev.preventDefault();
+                        if(target&&(target.tagName.toLowerCase() === "td")&&(target.className==="shadow")) {
+                            var _class = target.className;
+                            if(_class.indexOf("maskCat")===-1) {
+                                target.className += " maskCat";
+                            };
+                        };
+                        return false;
+                    };
+                    if(navigator.userAgent.toLowerCase().indexOf("mobile")===-1) {
+                        $(cfg.el.parentNode).find("tr").click(click);
+                        //cfg.el.parentNode.addEventListener("dblclick",contextmenu);
+                        cfg.el.addEventListener("contextmenu", contextmenu);
+                    }else{
+                        $(cfg.el.parentNode).find("tr").singleTap(click);
+                        $(cfg.el.parentNode).find("tr").longTap(contextmenu);
+                    }
+                },
+                alert : function(msg) {
+                    $.dialog({
+                        content : msg || '游戏重新开始',
+                        title : 'ok',
+                        ok : function() {
+                            start();
+                        },
+                        cancel : function() {
+                            return false;
+                        },
+                        lock : true
+                    });
+                },
+                resize : function() {
+                    cfg.el.parentNode.style.height = Math.min(document.documentElement.clientHeight, document.documentElement.clientWidth) + "px";
+                    cfg.el.parentNode.style.width = Math.min(document.documentElement.clientHeight, document.documentElement.clientWidth) + "px";
+                }
+            };
+        })(G);
+
+        G.init = function() {
+            //document.body.innerHTML = JSON.stringify(G.data.randomData(cfg.width, cfg.height) );
+            var data = G.data.mapData.newData(cfg.width, cfg.height);
+            G.map.mapView( data );
+            G.event.bind();
+        };
+    })(G);
+
+    function start(value0 ,value1) {
+        G.showGameBlock();
+        cfg.width = value0 || cfg.width;
+        cfg.height = value0 || cfg.height;
+        G.el = cfg.el = document.getElementById("tbody");
+        G.init();
+    };
+
+    //**路由模块
+    (function(strs,G){
+        var modules = {};
+        for(var  i= 0, str= strs.split(" "), len = str.length; i<len; i++ ){
+            modules[str[i]] = document.getElementById(str[i]);
+        };
+        var toSelect = document.getElementById("to-select");
+        var toHelp = document.getElementById("to-help");
+        var toGameBlock = document.getElementById("toGameBlock");
+        toSelect.onclick = function() {
+            hideFn();
+            modules["select"].style.display = "block";
+        };
+        toGameBlock.onclick = function() {
+            hideFn();
+            G.showGameBlock();
+        };
+        toHelp.onclick = function() {
+            hideFn();
+            modules["help"].style.display = "block";
+        };
+        //导出这个方法;
+        G.showGameBlock = function() {
+            document.getElementById("select").style.display = "none";
+            document.getElementById("game").style.display = "table";
+            modules["use-module"].style.display = "block";
+        };
+        var hideFn = function() {
+            for(module in modules) {
+                modules[module].style.display = "none";
+            };
+        };
+
+        //初始化就显示一个选择模块;
+        hideFn();
+        toSelect.onclick()
+    })("select help game use-module",G);
+    //**/
+
+    //消息提示模块
+    (function(G){
+        var eUse = document.getElementById("use");
+        var eCanUse = document.getElementById("canUse");
+        eUse.addEventListener("click",function(ev) {
+            var num = parseInt(eCanUse.innerHTML);
+            if(!isFinite(num)|| num===0) {
+                return ;
+            };
+            var len = document.getElementById("tbody").getElementsByClassName("null");
+            var el = document.getElementById("tbody").getElementsByClassName("null")[parseInt( Math.random()*len.length )].parentNode
+            click({target : el});
+            /*
+            var event = document.createEvent("MouseEvents");
+            event.initMouseEvent("click", true, true, document.defaultView, 0, 0, 0, 0, 0,false, false, false, false, 0, null);
+            el.dispatchEvent(event);
+            */
+            eCanUse.innerHTML = num-1;
+            $.dialog({
+                content : '使用了一次天降神喵',
+                title: "alert",
+                time : 1400
+            });
+        });
+    })(G);
+</script>
+</body>
+</html>

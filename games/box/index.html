@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://sqqihao.github.io/games/rusBlock/libs/Tiny-Alert/css/zepto.alert.css"/>
+    <script src="libs/jquery-1.9.1.min.js"></script>
+    <script src="libs/handlebars.js"></script>
+    <script src="libs/jquery-cookie.js"></script>
+    <script src="http://sqqihao.github.io/games/rusBlock/libs/Tiny-Alert/js/zepto.alert.js"></script>
+    <script id="tpl" type="text/x-handlebars-template">
+        {{#initY}}{{/initY}}
+        {{#each this}}
+            {{#each this}}
+                <div class="{{#getClass this}}{{/getClass}}" data-x="{{@index}}" data-y="{{#getY}}{{/getY}}" style="left:{{#calc @index}}{{/calc}};top:{{#calc 1111}}{{/calc}}">
+                    <!--{{@index}}
+                    {{#getY}}{{/getY}}
+                    -->
+                </div>
+            {{/each}}
+            {{#addY}}{{/addY}}
+        {{/each}}
+    </script>
+    <script>
+        (function() {
+            var y = 0;
+            Handlebars.registerHelper("initY", function() {
+                y = 0;
+            });
+            Handlebars.registerHelper("addY", function() {
+                y++;
+            });
+            Handlebars.registerHelper("getY", function() {
+                return y;
+            });
+            Handlebars.registerHelper("calc", function(arg) {
+                //console.log(arg)
+                if(arg!==1111) {
+                    return 50*arg + "px";
+                }else{
+                    return 50*y + "px";
+                };
+            });
+            Handlebars.registerHelper("getClass", function(arg) {
+                switch( arg ) {
+                    case 0 :
+                        return "bg"
+                    case 1 :
+                        return "block"
+                    case 2 :
+                        return "box"
+                    case 3 :
+                        return "target"
+                };
+            });
+            window.util = {
+                isMobile : function() {
+                    return navigator.userAgent.toLowerCase().indexOf("mobile") !== -1 || navigator.userAgent.toLowerCase().indexOf("android") !== -1  || navigator.userAgent.toLowerCase().indexOf("pad") !== -1;
+                }
+            }
+        })();
+    </script>
+</head>
+<style>
+    #game{
+        display: none;
+    }
+    #house{
+        position: relative;
+    }
+    .bg{
+        position: absolute;
+        width:50px;
+        height:50px;
+        box-sizing: border-box;
+    }
+    .block{
+        position: absolute;
+        background-image: url(imgs/wall.png);
+        width:50px;
+        height:50px;
+        box-sizing: border-box;
+    }
+    .box{
+        position: absolute;
+        background: #fbd500;
+        width:50px;
+        height:50px;
+        background-image: url(imgs/box.png);
+    }
+    .target{
+        position: absolute;
+        background: url(imgs/target.jpg);
+        background-size: 50px 50px;;
+        width:50px;
+        height:50px;
+        box-sizing: border-box;
+    }
+    #person{
+        background-image: url(imgs/person.png);
+        width:50px;
+        height:50px;
+        position: absolute;
+    }
+    #person.up{
+        background-position: 0 0;
+    }
+    #person.right{
+        background-position:-50px  0 ;
+    }
+    #person.bottom{
+        background-position:-100px 0 ;
+    }
+    #person.left{
+        background-position:-150px 0 ;
+    }
+    /*移动端的DOM*/
+    .operate-bar{
+        font-size:30px;
+    }
+    .height20percent{
+        height:30%;
+    }
+    .height30percent{
+        height:30%;
+    }
+    .height40percent{
+        height:40%;
+    }
+    .height100percent{
+        height:100%;
+    }
+    .font30{
+        font-size:30px;
+        color:#34495e;
+    }
+</style>
+<body>
+    <div id="select">
+        <div class="container">
+            <div class="row">
+                <p class="text-info">
+                    已经解锁的关卡:
+                <p id="level">
+                </p>
+                </p>
+                <button id="start" class="btn btn-default">
+                    开始游戏
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id="game" class="container">
+        <div class="row">
+            <button onclick="location.reload()" class="btn btn-info" >
+                返回选择关卡重新
+            </button>
+            <div id="house">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        G = {
+            level: [
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,0,1,1,1,0,0,0,0],
+                        [0,1,1,3,3,1,0,0,0],
+                        [0,1,0,0,0,0,1,0,0],
+                        [0,1,0,0,0,0,1,0,0],
+                        [0,1,1,1,1,1,1,0,0]
+                    ],
+                    person: {x : 2, y : 2},
+                    box: [{x:3, y : 2},{x:4,y:2}]
+                },
+                //第二关
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,1,1,1,1,1,0,0],
+                        [0,1,0,0,1,1,1,0],
+                        [0,1,0,0,0,0,1,0],
+                        [1,1,1,0,1,0,1,1],
+                        [1,3,1,0,1,0,0,1],
+                        [1,3,0,0,0,1,0,1],
+                        [1,3,0,0,0,0,0,1],
+                        [1,1,1,1,1,1,1,1]
+                    ],
+                    person: {x : 2, y : 2},
+                    box: [{x:3, y : 2}, {x:2,y:5} ,{x:5, y:6}]
+                    /*
+                    box : [
+                        {x:3, y : 1},
+                        {x:4, y : 1},
+                        {x:4, y : 2},
+                        {x:5, y : 5}
+                    ]
+                    */
+                },
+                //第三关
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,0,0,1,1,1,1,1,1,0],
+                        [0,1,1,1,0,0,0,0,1,0],
+                        [1,1,3,0,0,1,1,0,1,1],
+                        [1,3,3,0,0,0,0,0,0,1],
+                        [1,3,3,0,0,0,0,0,1,1],
+                        [1,1,1,1,1,1,0,0,1,0],
+                        [0,0,0,0,0,1,1,1,1,0]
+                    ],
+                    person: {x : 8, y : 3},
+                    box: [{x:4, y : 2}, {x:3,y:3} ,{x:4, y:4},{x:5, y:3},{x:6, y:4}]
+                },
+                //第四关
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,1,1,1,1,1,1,1,0,0],
+                        [0,1,0,0,0,0,0,1,1,1],
+                        [1,1,0,1,1,1,0,0,0,1],
+                        [1,0,0,0,0,0,0,0,0,1],
+                        [1,0,3,3,1,0,0,0,1,1],
+                        [1,1,3,3,1,0,0,0,1,0],
+                        [0,1,1,1,1,1,1,1,1,0]
+                    ],
+                    person: {x : 2, y : 3},
+                    box: [{x:2, y : 2}, {x:4,y:3} ,{x:6, y:4},{x:7, y:3},{x:6, y:4}]
+                },
+                //第五关
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,0,1,1,1,1,0,0],
+                        [0,0,1,3,3,1,0,0],
+                        [0,1,1,0,3,1,1,0],
+                        [0,1,0,0,0,3,1,0],
+                        [1,1,0,0,0,0,1,1],
+                        [1,0,0,1,0,0,0,1],
+                        [1,0,0,0,0,0,0,1],
+                        [1,1,1,1,1,1,1,1]
+                    ],
+                    person: {x : 4, y : 6},
+                    box: [{x:4, y : 3}, {x:3,y:4} ,{x:4, y:5}, {x:5,y:5}]
+                    /*
+                     box : [
+                     {x:3, y : 1},
+                     {x:4, y : 1},
+                     {x:4, y : 2},
+                     {x:5, y : 5}
+                     ]
+                     */
+                },
+                    //第六关
+                {
+                    //0是空的地图
+                    //1是板砖
+                    //3是目标点
+                    state:[
+                        [0,0,0,0,1,1,1,1,1,1,1,0],
+                        [0,0,0,0,1,0,0,1,0,0,1,0],
+                        [0,0,0,0,1,0,0,0,0,0,1,0],
+                        [1,1,1,1,1,0,0,1,0,0,1,0],
+                        [3,3,3,1,1,0,0,0,0,0,1,1],
+                        [3,0,0,1,0,0,0,0,1,0,0,1],
+                        [3,0,0,0,0,0,0,0,0,0,0,1],
+                        [3,0,0,1,0,0,0,0,1,0,0,1],
+                        [3,3,3,1,1,1,0,1,0,0,1,1],
+                        [1,1,1,1,1,0,0,0,0,0,1,0],
+                        [0,0,0,0,1,0,0,1,0,0,1,0],
+                        [0,0,0,0,1,1,1,1,1,1,1,0]
+                    ],
+                    person: {x : 5, y : 10},
+                    box: [
+                        {x:5,  y:6},
+                        {x:6,  y:3},
+                        {x:6,  y:5},
+                        {x:6,  y:7},
+                        {x:6,  y:9},
+                        {x:7,  y:2},
+                        {x:8,  y:2},
+                        {x:9,  y:6}
+                    ]
+                }
+            ],
+            //map data
+            mapData : (function() {
+                var data = {};
+                return {
+                    get: function () {
+                        return data;
+                    },
+                    set: function (arg) {
+                        data = arg;
+                    },
+                    //穿进来的数据在界面中是否存在;
+                    collision: function (x, y) {
+                        if( data.state[y][x] === 1)return true;
+                        return false;
+                    },
+                    collisionBox : function(x,y) {
+                        for(var i= 0, len= data.box.length; i< len; i++) {
+                            if( data.box[i].x === x&& data.box[i].y === y)return data.box[i];
+                        };
+                        return false;
+                    }
+                }
+            })(),
+            view : {
+                initMap : function(map) {
+                    document.getElementById("house").innerHTML = Handlebars.compile( document.getElementById("tpl").innerHTML )( map );
+                },
+                initPerson : function(personXY) {
+                    var per = document.createElement("div");
+                    per.id = "person";
+                    G.per = per;
+                    document.getElementById("house").appendChild(per);
+                    per.style.left = 50* personXY.x+"px";
+                    per.style.top = 50* personXY.y+"px";
+                },
+                initBox : function(boxs) {
+                    for(var i=0;i<boxs.length; i++) {
+                        var box = document.createElement("div");
+                        box.className = "box";
+                        G.box = box;
+                        document.getElementById("house").appendChild(box);
+                        box.style.left = boxs[i].x*50 + "px";
+                        box.style.top = boxs[i].y*50 + "px";
+                    };
+                },
+                deleteBox : function() {
+                    var eBoxs = document.getElementsByClassName("box");
+                    var len = eBoxs.length;
+                    while( len-- ) {
+                        eBoxs[len].parentNode.removeChild( eBoxs[len] );
+                    };
+                }
+            },
+            /*
+            * 0;向上
+            * 1:向右
+            * 2:向下
+            * 3:向左
+            * */
+            direction : 0,
+            step : function(xy) {
+                //这里面要做很多判断
+                /*包括：
+                 用户当前的方向和以前是否一样，如果不一样要先转头；
+                 如果一样的话，判断前面是否有石头， 是否有箱子；
+                     如果前面有墙壁或者
+                     前面有箱子，而且箱子前面有墙壁就return
+                 把人物往前移动
+                 如果人物的位置上有一个箱子，把箱子也移动一下;
+                 */
+                var mapData = this.mapData.get();
+                //对参数进行处理;
+                if ( typeof xy === "string" ) {
+                    var x = 0, y = 0, xx = 0, yy = 0;
+                    switch( xy ) {
+                        case "left" :
+                                if(this.direction==0){
+                                    x = -1;
+                                    xx = -2;
+                                }else{
+                                    x = 0;
+                                };
+                            this.direction = 0;
+                            break;
+                        case "top" :
+                                if(this.direction===1){
+                                    y = -1;
+                                    yy = -2
+                                }else{
+                                    y = 0;
+                                };
+                                this.direction = 1;
+                            break;
+                        case "right" :
+                                if(this.direction === 2) {
+                                    x = 1;
+                                    xx = 2;
+                                }else{
+                                    x = 0;
+                                };
+                            this.direction = 2;
+                            break;
+                        case "bottom" :
+                                if(this.direction ===3 ) {
+                                    y = 1;
+                                    yy = 2;
+                                }else{
+                                    y = 0;
+                                };
+                            this.direction = 3;
+                    };
+                    //如果是墙壁就不能走
+                    if( this.mapData.collision(mapData.person.x + x, mapData.person.y+y) ) {
+                        return;
+                    };
+                    //如果碰到的是箱子, 而且箱子前面是墙壁, 就return
+                    if( this.mapData.collisionBox(mapData.person.x+x, mapData.person.y+y) &&  this.mapData.collision(mapData.person.x+xx, mapData.person.y+yy)) {
+                        return;
+                    };
+                    if( this.mapData.collisionBox(mapData.person.x+x, mapData.person.y+y) &&  this.mapData.collisionBox(mapData.person.x+xx, mapData.person.y+yy)) {
+                        return
+                    }
+                    //mapData.x+xx, mapData.y+yy
+                    mapData.person.x = mapData.person.x + x;
+                    mapData.person.y = mapData.person.y + y;
+
+                    this.per.style.left = 50* mapData.person.x+"px";
+                    this.per.style.top = 50* mapData.person.y+"px";
+                    this.per.className = {
+                        0:"up",
+                        1:"right",
+                        2:"bottom",
+                        3:"left"
+                    }[this.direction];
+                    var theBox = {};
+                    if(theBox = this.mapData.collisionBox(mapData.person.x, mapData.person.y)) {
+                        theBox.x = mapData.person.x+x;
+                        theBox.y = mapData.person.y+y;
+                        this.view.deleteBox();
+                        this.view.initBox(mapData.box);
+                        this.testSuccess();
+                    };
+                    //如果碰到了箱子，而且箱子前面不能走就return， 否则就走箱子和人物;
+                };
+            },
+            /*
+            * return Boolean;
+            * */
+            //遍历所有的box，如果在box中的所有x，y在地图中对应的值为3，全部通过就返回true
+            testSuccess : function() {
+                var mapData = this.mapData.get();
+                for(var i=0; i<mapData.box.length; i++) {
+                    if(mapData.state[mapData.box[i].y][mapData.box[i].x] != 3) {
+                        return false;
+                    };
+                };
+                $.dialog({
+                    content : '游戏成功, 进入下一关!',
+                    title : 'alert',
+                    ok : function() {
+                        if( G.now+1 > G.level.length-1 ) {
+                            alert("闯关成功");
+                            return ;
+                        }else{
+                            //如果可用的等级大于当前的等级，就把level设置进去;
+                            if( G.now+1 > parseInt( $.cookie('level') || 0 )) {
+                                $.cookie('level' , G.now+1 , { expires: 7 });
+                            };
+                            start( G.now+1 );
+                            return ;
+                        };
+                    },
+                    cancel : function(){
+                        location.reload();
+                    },
+                    lock : true
+                });
+            },
+            //这里面需要处理 map， 人物数据， box数据
+            init : function() {
+                //更新地图;
+                //this.level[0].state
+                this.view.initMap( this.mapData.get().state  );
+                this.view.initPerson( this.mapData.get().person );
+                this.view.initBox( this.mapData.get().box );
+                //this.person = this.factory.Person(0,0);
+                //this.box = this.factory.Box([{x:0,y:1},{x:1,y:1},{x:0,y:2},{x:1,y:2}]);
+                if( this.hasBind ) {
+                    return
+                };
+                this.hasBind = true;
+                this.controller();
+            },
+            controller : function() {
+                function mobileDOM() {
+                    var mobileDOMString = '\
+                        <div class="navbar-fixed-bottom height20percent operate-bar"  >\
+                            <div class="container height100percent">\
+                                <div class="row text-center height100percent">\
+                                    <div class="height40percent arrow-up">\
+                                        <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>\
+                                    </div>\
+                                    <div  class="height30percent">\
+                                        <div class="col-xs-6 arrow-left">\
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>\
+                                        </div>\
+                                        <div class="col-xs-6 arrow-right">\
+                                            <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>\
+                                        </div>\
+                                    </div>\
+                                    <div  class="height30percent arrow-down">\
+                                        <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </div>\
+                        ';
+                        +function addDOM() {
+                            $("#game").append( mobileDOMString );
+                        }();
+                };
+                var _this = this;
+                if( window.util.isMobile() ) {
+                    $(window).on("swipeLeft",function() {
+                        _this.step("left");
+                    }).on("swipeRight",function() {
+                        _this.step("right");
+                    }).on("swipeUp",function() {
+                        _this.step("top");
+                    }).on("swipeDown",function() {
+                        _this.step("bottom");
+                    });
+                    mobileDOM();
+
+                    $(".arrow-up").tap(function() {
+                        _this.step("top");
+                    });
+                    $(".arrow-down").tap(function() {
+                        _this.step("bottom");
+                    });
+                    $(".arrow-left").tap(function() {
+                        _this.step("left");
+                    });
+                    $(".arrow-right").tap(function() {
+                        _this.step("right");
+                    });
+                }else{
+                    $(window).on("keydown", function(ev) {
+                        var state = "";
+                        switch( ev.keyCode ) {
+                            case 37 :
+                                state = "left";
+                            break;
+                            case 39 :
+                                state = "right";
+                            break;
+                            case 38 :
+                                state = "top";
+                            break;
+                            case 40 :
+                                state = "bottom";
+                            break;
+                        };
+                        _this.step(state)
+                    });
+                };
+            }
+        };
+
+        function start( level ) {
+            G.now = level;
+            G.mapData.set(G.level[level] );
+            G.init();
+            $("#game").show();
+            $("#select").hide();
+        };
+
+        function init() {
+            var cookieLevel = $.cookie('level') || 0;
+            start( cookieLevel );
+        };
+        $("#start").click(function() {
+            init();
+        });
+        String.prototype.repeat = String.prototype.repeat || function(num) {
+            return  (new Array(num+1)).join( this.toString() );
+        };
+
+        window.onload = function() {
+            var cookieLevel = $.cookie('level') || 0;
+            $("#level").html( function() {
+                var index = 0;
+               return "<a href='###' class='btn btn-info' onclick='start({{i}})'>关卡</a>&nbsp;&nbsp;&nbsp;&nbsp;".repeat((parseInt($.cookie('level')) || 0)+1).replace(/{{i}}/gi, function() {
+                   return index++;
+               })
+            });
+        }
+    </script>
+</body>
+</html>

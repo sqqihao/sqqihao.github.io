@@ -1,0 +1,162 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* ------------------------------------------------- Menu ------------------------------- */
+.DOTA_Menu{
+	position:relative; font-size:12px; line-height:22px;
+}
+.DOTA_Menu *, .DOTA_Menu div{
+	z-index:3000;
+}
+.DOTA_MainMenu{
+	height:24px; overflow:hidden; 
+}
+.DOTA_MainMenu .DOTA_MenuItem{
+	float:left; width:60px; color:#DEE07C; text-align:center; border:0px solid #597FBE; 
+}
+.DOTA_MainMenu .hover{
+	color:#004E74; background:url(images/dota/menubg.gif) no-repeat;
+}
+.DOTA_MainMenu .click{
+	color:#004E74; background:url(images/dota/menubg.gif) no-repeat;
+}
+.DOTA_SubMenu{
+	display:none; position:absolute; top:20px; left:0px; background:#A5D7FF; width:172px; overflow:hidden;
+	border:1px solid #2980BE; color:#004E74; border-left:1px solid #D8EFFB; border-top:1px solid #D8EFFB;
+}
+.DOTA_SubMenu .DOTA_MenuItem{
+	float:none; color:#004E74; margin:1px;
+}
+.DOTA_SubMenu .hover{
+	background:#004E74; color:#eee; margin:1px;
+}
+.DOTA_SubMenu .DOTA_MenuSeparator{
+	height:0px; line-height:0px; font-size:0px; margin-top:6px; margin-bottom:6px; margin-left:2px; margin-right:2px;
+	border-top:1px solid #004E74; border-bottom:1px solid #E4F4FD;
+}
+.DOTA_SubMenu .DOTA_MenuItem span{
+	display:inline-block;
+}
+.DOTA_SubMenu .DOTA_MenuItem_Check{
+	width:20px; font-family:"宋体"; text-align:center;
+}
+.DOTA_SubMenu .DOTA_MenuItem_Text{
+	width:135px;
+}
+.DOTA_SubMenu .DOTA_MenuItem_More{
+	width:15px; text-align:center;
+}
+
+/* ------------------------------------------------- Button ------------------------------- */
+.DOTA_Button, .DOTA_Button_Hover, .DOTA_Button_Down{
+	background:url(images/btn_bg.bmp) no-repeat; color:#2B4A84; text-align:center; font-size:12px;
+	padding:0px; margin:0px; width:57px; height:24px; line-height:24px;
+}
+.DOTA_Button_Hover{
+	background:url(images/btn_bg.bmp) -57px 0px no-repeat;
+}
+.DOTA_Button_Down{
+	background:url(images/btn_bg.bmp) -114px 0px no-repeat;
+}
+
+/* ------------------------------------------------- Window ------------------------------- */
+.DOTA_Window {
+	position:relative; left:50px; top:50px; background:#506DA9; border:1px solid #698CD0; width:400px; height:300px;
+}
+.DOTA_Window .titleContainer{
+	height:25px; line-height:25px; background:url(images/dota/win_title_bg.gif) repeat-x; color:#EED435; overflow:hidden; padding:2px;
+}
+.DOTA_Window .titleContainer .title{
+	font-weight:bold; padding-left:5px;
+}
+.DOTA_Window .titleContainer .button, .DOTA_Window .titleContainer .hover {
+	display:block; position:absolute; top:2px; right:5px; width:23px; height:23px;
+	background:url(images/dota/close.bmp) no-repeat;
+}
+.DOTA_Window .titleContainer .hover{
+	background:url(images/dota/close.bmp) -23px 0px no-repeat;
+}
+.DOTA_Window .content{
+	height:260px; overflow:auto; color:#FFF; 
+}
+.DOTA_OverLayer{
+	display:none; position:absolute; left:0px; top:0px; background:#506DA9;
+}
+.DOTA_Dialog{
+	display:none;
+}
+.DOTA_Dialog .buttonContainer{
+	position:relative; height:50px;
+}
+.DOTA_Window_MoveBG{
+	 position:absolute; display:none; background:#304C70; border:1px solid #1F3764;
+}
+.DOTA_Window_MoveBG div{
+	height:28px; line-height:28px; background:url(images/dota/win_title_bg.gif) repeat-x;  overflow:hidden; 
+}
+
+
+/* ------------------------------------------------- Tab ------------------------------- */
+.DOTA_Tab{
+	overflow:hidden;
+}
+.DOTA_Tab_Title{
+	height:22px; line-height:22px; padding-left:10px;
+}
+.DOTA_Tab_Title a, .DOTA_Tab_Title a:hover{
+	display:inline-block; margin-right:1px; padding-left:8px; padding-right:8px;
+	background:#FFF;
+}
+.DOTA_Tab_Title a:hover{
+	background:#EEE;
+}
+.DOTA_Tab_Title .click, .DOTA_Tab_Title a.click:hover{
+	background:#888; color:#FFF;
+}
+.DOTA_Tab_Content{
+	background:#FFF; border:1px solid #888;
+}
+
+
+/* ------------------------------------------------- Slider ------------------------------- */
+.DOTA_Slider{
+	height:22px; line-height:20px; overflow:hidden; position:relative;
+}
+.DOTA_Slider_Line{
+	float:left; border-top:1px solid #243558; border-bottom:1px solid #698CD0; 
+	height:0px; line-height:0px; font-size:0px; margin-top:10px;
+}
+.DOTA_Slider_Text{
+	float:right; color:#EEE; -moz-user-select:none;
+}
+.DOTA_Slider_Box{
+	position:absolute; clear:both; top:0px; width:8px; height:20px; background:#354D72;
+	border-top:1px solid #4B73B9;  border-left:1px solid #4B73B9;
+	border-right:1px solid #223354; border-bottom:1px solid #223354; 
+}
+
+
+/* ------------------------------------------------- Tooltip ------------------------------- */
+.DOTA_Tooltip{
+	position:absolute; border:1px solid #999; background:#444; color:#00AA00;
+}
+
+/* --------------------------------------------- CheckBox Radio ----------------------------- */
+.DOTA_CheckBox, .DOTA_Radio{
+	height:22px; line-height:22px; padding-left:24px; cursor:url(images/link.cur), auto;
+}
+.DOTA_CheckBox input, .DOTA_Radio input{
+	position:absolute; left:-9999px; height:10px;
+}
+.DOTA_CheckBox_On{
+	background:url(images/dota/chk_on.gif) 3px -2px no-repeat;
+}
+.DOTA_CheckBox_Off{
+	background:url(images/dota/chk_off.gif) 3px -2px no-repeat;
+}
+.DOTA_Radio_On{
+	background:url(images/dota/rdo_on.gif) 3px 0px no-repeat;
+}
+.DOTA_Radio_Off{
+	background:url(images/dota/rdo_off.gif) 3px 0px no-repeat;
+}

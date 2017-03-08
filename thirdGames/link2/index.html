@@ -1,0 +1,1143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>JavaScript版连连看 v0.2</title>
+<meta name="Keywords" content="JavaScript,连连看,JS,JavaScript连连看,JS连连看,QQ,QQ连连看" />
+<meta name="description" content="JavaScript连连看，仿QQ游戏连连看制作，带选图和自定议地图功能，还有调整游戏速度，声音等功能" />
+<meta name="author" content="freewind,mIcrodusT,freewind#163.com" />
+<meta name="copyright" content="freewind" /><meta name="robots" content="index, follow" />
+<meta name="googlebot" content="index, follow" />
+<link rel="stylesheet" type="text/css" href="Skin/Common.css"/>
+<link id="skin" rel="stylesheet" type="text/css" href="Skin/QQ/Link.css"/>
+<link id="skin" rel="stylesheet" type="text/css" href="Skin/QQ/DOTA_All.css"/>
+<script type="text/javascript" src="Scripts/soundmanager2-nodebug-jsmin.js" charset="utf-8"></script>
+<script type="text/javascript" src="Scripts/Base.js"></script>
+<script type="text/javascript" src="Scripts/Animation.js"></script>
+<script type="text/javascript" src="Scripts/Button.js"></script>
+<script type="text/javascript" src="Scripts/Drag.js"></script>
+<script type="text/javascript" src="Scripts/Progress.js"></script>
+<script type="text/javascript" src="Scripts/Menu.js"></script>
+<script type="text/javascript" src="Scripts/Toolbar.js"></script>
+<script type="text/javascript" src="Scripts/Window.js"></script>
+<script type="text/javascript" src="Scripts/ImageLoader.js"></script>
+<script type="text/javascript" src="Scripts/SoundLoader.js"></script>
+<script type="text/javascript" src="Service/Map.asp" charset="utf-8"></script>
+<script type="text/javascript">
+var soundManagerIsLoad = false;
+soundManager.onload = function(){
+	soundManagerIsLoad = true;
+};
+soundManager.onerror = function(){
+	Link.SM2 = false;
+};
+
+function Point(r, c){
+	this.r = r || 0;
+	this.c = c || 0;
+};
+Point.prototype = {
+	toString : function(){
+		return "r = " + this.r + ", c = " + this.c;
+	},
+	equal : function(pt){
+		return (this.r === pt.r && this.c === pt.c);
+	},
+	copy : function(pt){
+		this.r = pt.r;
+		this.c = pt.c;
+	},
+	clone : function(){
+		return new Point(this.r, this.c);
+	}
+};
+var Link = { wait: 0, SM2 : true };
+Link.Map = function(id, name, data, author, time){
+	this.id = id || (Link.Map.Index ? ++Link.Map.Index : Link.Map.Index = 1);
+	this.name = name || "";
+	this.data = data || "";
+	this.author = author || "System";
+	this.num = this.data.replace(/_/g, "").length;
+	this.time = time || 0;
+};
+Link.Music = [['sound/start.mp3', 'start'],['sound/sel.mp3', 'sel'], ['sound/elec.mp3', 'boom'], ['sound/flystar.mp3', 'flystar'], ['sound/end.mp3', 'end']];
+Link.BGMusic = [['sound/bg/myth.mp3','myth'],['sound/bg/yinxindecb.mp3','yinxindecb'],['sound/bg/beyond.mp3','beyond'],['sound/bg/mylove.mp3','mylove']];
+Link.Status = {
+	Wait 	: 1,
+	Pause 	: 2,
+	Gaming 	: 3,
+	Stop	: 4
+};
+Link.Speed = {
+	Slow 	: 3,
+	Normal	: 2,
+	Fast	: 1
+};
+Link.Level ={ 
+	data :  [["小星星", 0],["摩羯座", 100],["水瓶座", 200],["双鱼座", 500],["白羊座", 1000],["金牛座", 2000 ],
+			["双子座", 3000 ],["巨蟹座", 5000 ],["狮子座", 8000 ],["处女座", 12000 ],["天秤座", 20000 ],["天蝎座", 30000 ],
+			["射手座", 40000 ],["对对星座", 80000 ],["月亮座", 120000 ],["太阳座", 160000 ],["火眼金睛", 200000 ],
+			["钻石 * 摩羯座", 260000 ],["钻石 * 水瓶座", 280000 ],["钻石 * 双鱼座", 300000 ],["钻石 * 白羊座", 320000 ],
+			["钻石 * 金牛座", 340000 ],["钻石 * 双子座", 360000 ],["钻石 * 巨蟹座", 380000 ],["钻石 * 狮子座", 400000 ],
+			["钻石 * 处女座", 420000 ],["钻石 * 天秤座", 440000 ],["钻石 * 天蝎座", 460000 ],["钻石 * 射手座", 480000 ],
+			["神眼", 40000000 ]],
+	getName : function(val){
+		for(var i = this.data.length - 1; i > 0; i--){
+			if(val > this.data[i][1]){
+				return this.data[i][0];
+			}
+		}
+		return this.data[0][0];
+	}
+}
+Link.loadImage = function(){
+	var i, urls = [], map = loadMap(), btn;
+	window.progress1 = new DOTA.Progress("progressBar1");
+	urls.concat(["Images/boom.gif", "Images/row.gif", "Images/col.gif"]);
+	btn = ["linkBg.gif", "pauseBG.gif", "win.gif", "lose.gif"];
+	btn.concat(["btn_exit.gif", "btn_selMap.gif", "btn_set.gif", "btn_start.gif", "compass.gif", "reset.gif", "Line.bmp"]);
+	for( i = 0; i < btn.length; i++){
+		urls.push("Skin/QQ/Images/" + btn[i]);
+	}
+	for( i = 0; i < map.length; i++){
+		urls.push("Images/Map/Map" + map[i].id + ".gif");
+		urls.push("Images/Map/Map" + map[i].id + "B.gif");
+	}
+	for( i = 1; i <= 50; i++ ){
+		urls.push("Skin/QQ/Images/Box/img" + ("00" + i).slice(-3) + ".bmp");
+	}
+	var imgLoader = new DOTA.ImageLoader(urls, DOTA.Event.bind(progress1, progress1.progress), function(){Link.loadSound();});
+};
+Link.loadSound = function(){
+	DOTA.$("progressBar2").style.display = "block";
+	DOTA.$("imgLoadMsg").innerHTML = "图片加载完成";
+	
+	if(!soundManagerIsLoad && Link.wait < 50){
+		Link.wait++;
+		setTimeout(Link.loadSound, 30);
+		return;
+	}
+	window.progress2 = new DOTA.Progress('progressBar2');
+	if(DOTA.Browser.ie && Link.SM2){
+		if(Link.Sound) Link.Sound.dispose();
+		if(Link.BGSound) Link.BGSound.dispose();
+		Link.Sound = null;
+		Link.BGSound = null;
+	}
+	if(Link.SM2){  //如soundManager加载出错就跳过
+		Link.Sound = new DOTA.SoundLoader(Link.Music,
+			DOTA.Event.bind(progress2, progress2.progress), function(){Link.start();});
+		Link.BGSound = new DOTA.SoundLoader({sounds: Link.BGMusic, preLoad: false});
+	}else{
+		Link.start();
+	}
+};
+Link.start = function(){
+	DOTA.$("soundLoadMsg").innerHTML = "声音加载完成";
+	
+	window.progress1.dispose();
+	window.progress2.dispose();
+	DOTA.$("progressBar").style.display = "none";
+	
+	var game = new Game();
+	game.show();
+	
+	window.closeDialog = function(){
+		game.closeDialog();
+	};
+	window.getOption = function(){
+		return game.getOption();
+	};
+	window.setOption = function(obj){
+		game.setOption(obj);
+		game.closeDialog();
+	};
+	window.getOpacity = function(){
+		return game.getOpacity();
+	};
+	window.setOpacity = function(val){
+		game.setOpacity(val);
+	};
+	window.getMapMode = function(){
+		return game.getMapMode();
+	};
+	window.setMapMode = function(val){
+		game.setMapMode(val);
+		game.closeDialog();
+	};
+	window.getUserInfo = function(){
+		return game.getUserInfo();
+	};
+	window.setUserInfo = function(user){
+		game.setUserInfo(user);
+	};
+	window.addMap = function(id, name, data, author, time){
+		game.addMap(new Link.Map(id, name, data, author, time));
+	};
+	window.getMap = function(){
+		return game.getAllMap();
+	};
+};
+Link.dispose = function(){
+	try{
+		//Link.Sound.dispose();
+		//Link.BGSound.dispose();
+	}catch(e){}
+};
+
+function Game(config){
+	var self = this;
+	this.config = DOTA.Extend({
+		sound : true,
+		bgSound : true,
+		bgIndex : 0,
+		opacity : 100
+	}, config || {});
+	
+	this.Row = 11;
+	this.Col = 19;
+	this.ImageCount = 50;
+	this.timerID1 = 0;
+	this.timerID2 = 0;
+	this.mapIndex = -1;
+	this.currentMap = -1;
+	this.lockMap = false;
+	this.gameStatus = Link.Status.Wait;
+	
+	this.ptStart = new Point(-1, -1);
+	this.ptEnd = new Point();
+	this.Path = [];
+	this.arrMap = [];
+	
+	this.Window = DOTA.$("link");
+	this.Title = DOTA.$("title");
+	this.mapList = DOTA.$("mapList");
+	this.Window.style.display = "";
+	this.LeftBox = DOTA.$("leftBox").getElementsByTagName("span")[0];
+	this.gameArea = DOTA.$("gameArea");
+	
+	//地图设置
+	var curMap = 0, maxTime = 328, prevTime = 0;
+	var map = loadMap();
+	var gameInfo = {
+		count	: 0,
+		leftBox	: 0,
+		time	: 0,
+		timeLine: 0,
+		combo	: 0,
+		maxCombo: 0,
+		speed	: Link.Speed.Normal
+	};
+	var proInfo = {
+		reset	: 0,
+		compass	: 0
+	};
+	var userInfo = {
+		UserHead: 1,
+		Name	: "Player",
+		Score	: 0,
+		Level	: Link.Level.getName(0),
+		addScore : function(val){
+			this.Score += val;
+			this.Level = Link.Level.getName(this.Score);
+			saveData(1);
+		},
+		setName : function(name){
+			this.Name = name;
+			saveData(1);
+		},
+		setHead : function(n){
+			this.UserHead = n;
+			saveData(1);
+		}
+	}
+	
+	this.addMap = function(m){
+		map.push(m);
+	};
+	this.getAllMap = function(){
+		return map;
+	};
+	function resetBox(){
+		var i, j, img, M = this.Map, r, c, html;
+		for(i = 0; i < this.Row; i++){
+			for(j = 0; j < this.Col; j++){
+				if(M[i][j].img > 0){
+					img = 0;
+					while(img == 0){
+						r = parseInt(Math.random() * this.Row);
+						c = parseInt(Math.random() * this.Col);
+						if(M[r][c].img > 0){
+							img = M[r][c].img;
+							html = M[r][c].innerHTML;
+							M[r][c].img = M[i][j].img;
+							M[r][c].innerHTML = M[i][j].innerHTML;
+							M[i][j].img = img;
+							M[i][j].innerHTML = html;
+						}
+					}
+				}
+			}
+		}
+	}
+	function autoFind(){
+		var M = self.Map, PS = self.ptStart, PE = self.ptEnd, 
+			i, j, m, n, img, Row = self.Row, Col = self.Col;
+		for(i = 0; i < Row; i++){
+			PS.r = i;
+			for(j = 0; j < Col; j++){
+				PS.c = j;
+				if(M[i][j].img > 0){
+					img = M[i][j].img;
+					for(m = i; m < Row; m++){
+						PE.r = m;
+						for(n = (m == i ? j + 1 : 0); n < Col; n++){
+							PE.c = n;
+							if(M[m][n].img == img){
+								if(self.findPath(PS, PE)){
+									self.deleteBox();
+									self.playSound("boom");
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		//无解，重列后再次查找
+		resetBox.call(self);
+		self.playSound("flystar");
+		autoFind();
+	}
+	function addTimeLine(val){
+		if(self.gameStatus == Link.Status.Gaming){
+			gameInfo.timeLine += val;
+			gameInfo.timeLine = gameInfo.timeLine < 0 ? 0 : gameInfo.timeLine;
+			DOTA.$("timeLineImg").style.width = gameInfo.timeLine + "px";
+			if(gameInfo.timeLine >= maxTime){
+				gameOver(2);
+			}
+		}
+	}
+	function addUseTime(){
+		if(self.gameStatus == Link.Status.Gaming){
+			gameInfo.time++;
+			self.showScore();
+		}
+	}
+	
+	function saveData(type){
+		var cfg = self.config;
+		if(type < 0 || type == 1){
+			DOTA.Cookie.setCookie("userName", userInfo.Name);
+			DOTA.Cookie.setCookie("userScore", userInfo.Score);
+			DOTA.Cookie.setCookie("userHead", userInfo.UserHead);
+		}
+		if(type < 0 || type == 2){
+			DOTA.Cookie.setCookie("sound", cfg.sound ? 1 : 2);
+			DOTA.Cookie.setCookie("bgSound", cfg.bgSound ? 1 : 2);
+			DOTA.Cookie.setCookie("speed", gameInfo.speed);
+		}
+	}
+	
+	this.loadData = function(type){
+		if(type < 0 || type == 1){
+			var userName = DOTA.Cookie.getCookie("userName"), 
+				userScore = DOTA.Cookie.getCookie("userScore"),
+				userHead = DOTA.Cookie.getCookie("userHead");
+			if(userName){
+				userInfo.Name = userName;
+			}
+			if(userScore){
+				userInfo.Score = parseInt(userScore, 10);
+			}
+			if(userHead){
+				userInfo.UserHead = userHead;
+			}
+		}
+		if(type < 0 || type == 2){
+			var sound = DOTA.Cookie.getCookie("sound"), 
+				bgSound = DOTA.Cookie.getCookie("bgSound"),
+				speed = DOTA.Cookie.getCookie("speed");
+			if(sound){
+				this.config.sound = parseInt(sound) == 1 ? true : false;
+			}
+			if(bgSound){
+				this.config.bgSound = parseInt(bgSound) == 1 ? true : false;
+			}
+			if(speed){
+				gameInfo.speed = parseInt(speed);
+			}		
+		}
+	};
+	
+	this.deleteBox = function(){
+		var PS = this.ptStart, PE = this.ptEnd, M = this.Map;
+		this.selStart.style.left = "-400px";
+		this.showLine();
+		//删除
+		M[PS.r][PS.c].innerHTML = M[PE.r][PE.c].innerHTML = "";
+		M[PS.r][PS.c].img = M[PE.r][PE.c].img = 0;
+		PS.r = PS.c = -1;
+		
+		addTimeLine(-gameInfo.speed * 7 - 6);
+		gameInfo.leftBox -= 2;
+		var t = new Date().getTime();
+		if(prevTime > 0 && (t - prevTime) < 2000){
+			gameInfo.combo++;
+		}else{
+			gameInfo.combo = 1;
+		}
+		if(gameInfo.combo > gameInfo.maxCombo){
+			gameInfo.maxCombo = gameInfo.combo;
+		}		
+		prevTime = t;
+		this.showScore();
+		this.LeftBox.innerHTML = gameInfo.leftBox;
+		
+		if(gameInfo.leftBox <= 0){
+			gameOver(1);
+		}
+	};
+	
+	this.gameStart = function(){
+		this.gameStatus = Link.Status.Gaming;
+		this.timerID1 = setInterval(function(){addTimeLine(2);}, gameInfo.speed * 120);
+		this.timerID2 = setInterval(addUseTime, 1000);
+		this.LeftBox.innerHTML = gameInfo.leftBox;
+		DOTA.$("gameMsg").style.display = "none";
+	};
+	this.restart = function(){
+		if(this.gameStatus == Link.Status.Gaming || this.gameStatus == Link.Status.Pause){
+			this.mapIndex = this.currentMap;
+			this.start();
+		}
+	};
+	
+	function gameOver(type){
+		var msg = DOTA.$("gameMsg"), score = 0;
+		msg.style.display = "block";
+		switch(type){
+			case 1: //win
+				msg.className = "win";
+				score = gameInfo.count * 2 - gameInfo.time;
+				score += proInfo.reset * 8 + proInfo.compass * 4;
+				score += gameInfo.maxCombo * 3;
+				break;
+			case 2: //lose
+				msg.className = "lose";
+				score = - gameInfo.leftBox - parseInt(gameInfo.time / 2);
+				score = score - (3 - proInfo.reset) * 8 - (3 - proInfo.compass) * 4;
+				score += gameInfo.maxCombo * 3;
+				break;
+		}
+		self.gameStatus = Link.Status.Wait;
+		self.clearTimer();
+		userInfo.addScore(score);
+		DOTA.$("score").innerHTML = (score > 0 ? "+" : "") + score + "分";
+		self.showUserInfo();
+		self.playSound("end");
+	}
+	this.getMap = function(id){
+		curMap = id >= 0 ? id : parseInt(Math.random() * map.length);
+		if(!this.lockMap){
+			this.mapIndex = -1;
+		}
+		return map[curMap];
+	};
+	this.getMapIndex = function(){
+		return curMap;
+	};
+	this.getMapCount = function(){
+		return map.length;
+	};
+	this.resetData = function(){
+		gameInfo.leftBox = gameInfo.count = map[curMap].num;
+		gameInfo.time = gameInfo.combo = gameInfo.timeLine = 0;
+		proInfo.reset = proInfo.compass = 3;
+		this.ptStart.r = this.ptStart.c = this.ptEnd.r = this.ptEnd.c = -1;
+		this.selStart.style.left = "-400px";
+		var L = this.Line.getElementsByTagName("div");
+		for(i = 0; i < L.length; i++){
+			L[i].style.left = "-400px";
+		}
+		
+		this.gameStatus = Link.Status.Wait;
+		this.clearTimer();
+	};
+	this.showUserInfo = function(){
+		var span = DOTA.$("userInfo").getElementsByTagName("span");
+		span[0].innerHTML = userInfo.Name;
+		span[1].innerHTML = userInfo.Score;
+		span[2].innerHTML = userInfo.Level;
+		DOTA.$("uhImg").src = "images/userhead/uh" + userInfo.UserHead + ".gif";
+	};
+	this.showScore = function(){
+		var span = DOTA.$("scoreInfo").getElementsByTagName("span");
+		span[0].innerHTML = this.formatTime(gameInfo.time);
+		span[1].innerHTML = gameInfo.combo + "/" + gameInfo.maxCombo;
+	};
+	this.setProperty = function(){
+		DOTA.$("compass").style.backgroundPosition = proInfo.compass * -24 + "px 0px";
+		DOTA.$("reset").style.backgroundPosition = proInfo.reset * -24 + "px 0px";
+	};
+	this.usePro = function(type){
+		var ret = false;
+		if(this.gameStatus != Link.Status.Gaming){
+			return;
+		}
+		switch(type){
+			case 1: 
+				if(proInfo.compass > 0){
+					ret = true;
+					proInfo.compass--;
+					autoFind();
+				}
+				break;
+			case 2:
+				if(proInfo.reset > 0){
+					ret = true;
+					proInfo.reset--;
+					resetBox.call(self);
+					this.playSound("flystar");
+				}
+		}
+		if(ret){
+			this.setProperty();
+		}
+		return ret;
+	};
+	this.getOption = function(){
+		var o = this.config;
+		return {sound: o.sound, bgSound : o.bgSound, speed : gameInfo.speed };
+	};
+	this.setOption = function(obj){
+		var o = this.config;
+		//bgMusic
+		if(obj.bgSound != o.bgSound){
+			o.bgSound = obj.bgSound;
+			this.playBGMusic(o.bgSound);
+		}
+		o.sound = obj.sound;
+		gameInfo.speed = obj.speed;
+		if(this.gameStatus == Link.Status.Gaming || this.gameStatus == Link.Status.Pause){
+			clearInterval(this.timerID1);
+			this.timerID1 = setInterval(function(){addTimeLine(2);}, gameInfo.speed * 120);
+		}
+		saveData(2);
+	};
+	this.getUserInfo = function(){
+		return userInfo;
+	};
+	this.setUserInfo = function(user){
+		userInfo.Name = user.Name;
+		userInfo.UserHead = user.UserHead;
+		this.showUserInfo();
+		saveData(1);
+	};
+	
+	this.drag = new DOTA.Drag(this.Window, {handle: this.Title, onStart : function(){ self.menu.hide();} });
+	this.init();
+};
+Game.prototype = {
+	init : function(){
+		
+		this.initButton();
+		this.initGameArea();
+		this.initEvent();
+		this.loadData(-1);
+		this.showUserInfo();
+		this.initMapList();
+		
+		this.dlg = new DOTA.Window({
+			title	: "标题",
+			isShow	: false,
+			isClear	: false,
+			opacity	: 40
+		});
+		try{
+			this.playBGMusic(true);
+		}catch(e){}
+	},
+	playBGMusic : function(isPlay){
+		//bgsound
+		var self = this;
+		if(Link.SM2){
+			if(isPlay){
+				if(this.config.bgSound){
+					this.config.bgIndex = parseInt(Link.BGMusic.length * Math.random());
+					Link.BGSound.play(this.config.bgIndex, function(){
+						self.playBGMusic(true);
+					});
+				}
+			}else{
+				Link.BGSound.stop(this.config.bgIndex);
+			}
+		}
+	},
+	initButton : function(){
+		var self = this;
+		self.menu = new DOTA.MENU.Menu({id : "mainMenu", items : [
+			{
+				text : '游戏(G)',
+				menu : {
+					items : [
+						{
+							text : '开始', handle : DOTA.Event.bindEvent(this, this.onMenu, 'start')
+						},{
+							text : '暂停', handle : DOTA.Event.bindEvent(this, this.onMenu, 'pause')
+						},{
+							text : '结束', handle : DOTA.Event.bindEvent(this, this.onMenu, 'end')
+						}, '-' , {
+							text : '退出', handle : DOTA.Event.bindEvent(this, this.onMenu, 'exit')
+						}
+					]
+				}
+			}, {
+				text : '选项(O)',
+				menu : {
+					items : [
+						{ text : '游戏设置' , handle : DOTA.Event.bindEvent(this, this.onMenu, 'option') },
+						{ text : '选择地图' , handle : DOTA.Event.bindEvent(this, this.onMenu, 'selectMap') },
+						{ text : '自定义地图' , handle : DOTA.Event.bindEvent(this, this.onMenu, 'customMap') }
+					]
+				}
+			}, {
+				text : '帮助(H)',
+				menu : {
+					items : [
+						 { text : '关于', handle : DOTA.Event.bindEvent(this, this.onMenu, 'about') },
+						 { text : '建议和支持', handle : DOTA.Event.bindEvent(this, this.onMenu, 'msg') }
+					]
+				}
+			}
+		]});
+		this.menu.renderTo("gameMenu");
+		
+		new DOTA.Button({text:"", className:["btnClose", "btnCloseHover", "btnCloseDown"],
+			onClick : function(){
+				self.exit();
+			}
+		}).renderTo(DOTA.$("closeButton"));
+		
+		new DOTA.Button({text:"", className:["btnSet", "btnSetHover", "btnSetDown"],
+			onClick: function(){
+				self.showDialog("option");
+			}
+		}).renderTo(DOTA.$("btnLine1"));
+		
+		new DOTA.Button({text:"", className:["btnStart", "btnStartHover", "btnStartDown"],
+			onClick: function(){ self.start(); }
+		}).renderTo(DOTA.$("btnLine1"));
+		
+		new DOTA.Button({text:"", className:["btnSelMap", "btnSelMapHover", "btnSelMapDown"],
+			onClick: function(){ 
+				self.showDialog("selectMap");
+			}
+		}).renderTo(DOTA.$("btnLine2"));
+		
+		new DOTA.Button({text:"", className:["btnExit", "btnExitHover", "btnExitDown"],
+			onClick: function(){ self.exit(); }
+		}).renderTo(DOTA.$("btnLine2"));
+
+		DOTA.$("compass").onclick = function(){
+			self.usePro(1);
+		};
+		DOTA.$("reset").onclick = function(){
+			self.usePro(2);
+		};
+	},
+	initGameArea : function(){
+		var table = ["<table border='0' cellpadding='0' cellspacing='0'>"];
+		table.push(new Array(this.Row+1).join("<tr>" + new Array(this.Col+1).join("<td></td>") + "</tr>"));
+		table.push("</table>");
+		this.gameArea.innerHTML = table.join("");
+		var t = this.Table = this.gameArea.getElementsByTagName("table")[0];
+		this.Map = [];
+		for(var i = 0; i < t.rows.length; i++){
+			this.Map[i] = [];
+			for(var j = 0; j < t.rows[i].cells.length; j++){
+				this.Map[i][j] = t.rows[i].cells[j];
+			}
+		}
+		
+		var ss = this.selStart = document.createElement("div");
+		ss.className = "select";
+		this.gameArea.appendChild(ss);
+		
+		this.Line = document.createElement("div");
+		this.Line.className = "lineContainer";
+		this.Line.innerHTML = "<div></div><div></div><div></div><div></div><div></div>";
+		this.gameArea.appendChild(this.Line);
+	},
+	initEvent : function(){
+		var evt = DOTA.Event, self = this, list = this.mapList.getElementsByTagName("li");
+		DOTA.Event.addEvent(this.Table, "click", DOTA.Event.bindEvent(this, this.onClick));
+		DOTA.Event.addEvent(DOTA.$("gameMsg"), "click", DOTA.Event.bindEvent(this, this.pause));
+		DOTA.Event.addEvent(DOTA.$("userHead"), "click", DOTA.Event.bindEvent(this, this.editUserInfo)); 
+		DOTA.Event.addEvent(DOTA.$("nickName"), "click", DOTA.Event.bindEvent(this, this.editUserInfo));
+		DOTA.Event.addEvent(DOTA.$("mapImage"), "dblclick", DOTA.Event.bindEvent(this, this.restart));
+		
+		for(var i = 0; i < list.length; i++){
+			(function(i){
+				list[i].ondblclick = function(){
+					self.mapIndex = self.arrMap[i];
+					self.start();
+				};
+			})(i);
+		}
+	},
+	initMapList : function(){
+		var img = this.mapList.getElementsByTagName("img"), 
+			name = this.mapList.getElementsByTagName("div"),
+			mapCount = this.getMapCount(), i , id, oMap;
+		
+		this.arrMap = [];
+		for(i = 0 ; i < img.length; i++){
+			index = parseInt(mapCount * Math.random());
+			oMap = this.getMap(index);
+			img[i].src = "images/Map/Map" + oMap.id + ".gif";
+			name[i].innerHTML = oMap.name;
+			this.arrMap.push(index);
+		}
+	},
+	initMap : function(){
+		var oMap = this.getMap(this.mapIndex), data = oMap.data.split(""), i, j, tmp, iCount = this.ImageCount;
+		var selCount = Math.ceil(oMap.num / 4), imgs = [], selImgs = [], M = this.Map;
+		for(i = 0; i < iCount; i++){
+			imgs[i] = i + 1;
+		}
+		for(i = 0; i < iCount; i++){
+			j = parseInt(Math.random() * iCount);
+			tmp = imgs[i];
+			imgs[i] = imgs[j];
+			imgs[j] = tmp;
+		}
+		tmp = imgs[selCount - 1];
+		selImgs = imgs.slice(0, selCount - 1);
+		imgs = [].concat(selImgs, selImgs, selImgs, selImgs);
+		for(i = (selCount - 1) * 4; i < oMap.num; i++){
+			imgs.push(tmp);
+		}
+		for(i = 0; i < oMap.num; i++){
+			j = parseInt(Math.random() * oMap.num);
+			tmp = imgs[i];
+			imgs[i] = imgs[j];
+			imgs[j] = tmp;
+		}
+		tmp = 0;
+		for(var i = 0; i < this.Row; i++){
+			for(var j = 0; j < this.Col; j++){
+				if(data[i * this.Col + j] === "1"){
+					M[i][j].innerHTML = "<img src='Skin/QQ/Images/Box/img" + ("00" + imgs[tmp]).slice(-3) + ".bmp'>";
+					M[i][j].img = imgs[tmp];
+					//M[i][j].innerHTML = M[i][j].img;
+					tmp++;
+				}else{
+					M[i][j].innerHTML = "";
+					M[i][j].img = 0;
+				}
+			}
+		}	
+		
+		//
+		var span = DOTA.$("mapDetail").getElementsByTagName("span");
+		DOTA.$("mapImage").innerHTML = "<img title='双击重玩该地图' src='images/Map/Map" + oMap.id + "B.gif' border='0'>";
+		span[0].innerHTML = oMap.name;
+		span[1].innerHTML = oMap.num < 80 ? "简单" : ( oMap.num < 120 ? "一般" : ( oMap.num < 160 ? "困难" : "超难"));
+		span[2].innerHTML = oMap.num;
+		span[3].innerHTML = oMap.author;
+		this.currentMap = this.getMapIndex();
+	},
+	clearTimer : function(){
+		clearInterval(this.timerID1);
+		clearInterval(this.timerID2);
+		this.timerID1 = this.timerID2 = 0;
+	},
+	formatTime : function(time){
+		var m = parseInt(time / 60);
+		var s = time - m * 60;
+		return ("0" + m).slice(-2) + ":" + ("0" + s).slice(-2);
+	},
+	playSound : function(type){
+		if(!this.config.sound || !Link.SM2){
+			return;
+		}
+		Link.Sound.play(type);	
+	},
+	show : function(){
+		var left = (DOTA.F.getClientWidth() - this.Window.offsetWidth) / 2,
+			top = (DOTA.F.getClientHeight() - this.Window.offsetHeight) / 2;
+		
+		this.Window.style.left = Math.max(left, 0) + "px";
+		this.Window.style.top = Math.max(top, 0) + "px";
+	},
+	start : function(){
+		this.clearTimer();
+		this.initMap();
+		this.resetData();
+		this.showScore();
+		this.setProperty();
+		this.gameStart();
+		this.initMapList();
+		
+		this.playSound("start");	 
+	},
+	pause : function(){
+		switch(this.gameStatus){
+			case Link.Status.Gaming:
+				this.gameStatus = Link.Status.Pause;
+				this.menu.mainMenu.menus[0].subMenu.menus[1].setText("继续");
+				DOTA.$("gameMsg").style.display = "block";
+				DOTA.$("gameMsg").className = "pause";
+				break;
+			case Link.Status.Pause:
+				this.gameStatus = Link.Status.Gaming;
+				this.menu.mainMenu.menus[0].subMenu.menus[1].setText("暂停");
+				DOTA.$("gameMsg").style.display = "none";
+				break;
+		}
+	},
+	stop : function(){
+		if(this.gameStatus == Link.Status.Pause || this.gameStatus == Link.Status.Gaming){
+			this.clearTimer();
+			this.gameStatus = Link.Status.Stop;
+			this.playSound("end");
+		}
+	},
+	showDialog : function(type){
+		var dlg = this.dlg;
+		switch(type.toLowerCase()){
+			case "userinfo":
+				dlg.setTitle("用户信息设置");
+				dlg.loadUrl("member/user.html");
+				dlg.resizeTo(300, 200);
+				dlg.show();
+				break;
+			case "option":
+				dlg.setTitle("参数设置");
+				dlg.loadUrl("member/option.html");
+				dlg.resizeTo(300, 200);
+				dlg.show();
+				break;
+			case "selectmap":
+				dlg.setTitle("地图选择");
+				dlg.loadUrl("member/selectmap.html");
+				dlg.resizeTo(460, 365);
+				dlg.show();
+				break;
+			case "custommap":
+				dlg.setTitle("用户自定义地图　　　　<span style='font-weight:normal'>左键设定 右键取消</span>");
+				dlg.loadUrl("member/mapEditor.asp");
+				dlg.resizeTo(610, 500);
+				dlg.show();
+				break;
+			case "about":
+				dlg.setTitle("关于");
+				dlg.loadUrl("member/about.html");
+				dlg.resizeTo(280, 170);
+				dlg.show();
+				break;
+			case "user":
+				dlg.setTitle("编辑用户信息");
+				dlg.loadUrl("member/user.html");
+				dlg.resizeTo(340, 180);
+				dlg.show();
+				break;
+			case "msg":
+				dlg.setTitle("建议和支持");
+				dlg.loadUrl("member/Msg.asp");
+				dlg.resizeTo(550, 460);
+				dlg.show();
+				break;
+		}
+		this.pause();
+	},
+	editUserInfo : function(){
+		this.showDialog("user");
+	},
+	showLine : function(){
+		var i, j, P = this.Path, L, r1, c1, r2, c2, t, imgs,
+			M = this.Map, offset, PS = this.ptStart, PE = this.ptEnd;
+		for(i = 0; i < P.length; i++){
+			for(j = P.length - 1; j > i; j--){
+				if(P[i].equal(P[j])){
+					P.splice(j, 1);
+				}
+			}
+		}
+		L = this.Line.getElementsByTagName("div");
+		for(i = 0; i < L.length - 2; i++){
+			L[i].innerHTML = "";
+		}
+		for(i = 0; i < P.length - 1; i++){
+			r1 = P[i].r, c1 = P[i].c, r2 = P[i+1].r, c2 = P[i+1].c;
+			if(r1 == r2){ //--
+				if(c1 > c2){
+					t = c1, c1 = c2, c2 = t;
+				}
+				L[i].className = "lineX";
+				offset = DOTA.F.getOffset(M[r1][c1], this.Table);
+				L[i].style.left = offset.x + 16 + "px";
+				L[i].style.top = offset.y + "px";
+				L[i].style.width = (c2 - c1) * 31 + 2 + "px";
+				L[i].style.height = "35px";
+				L[i].innerHTML = new Array(c2-c1+1).join("<img src='images/row.gif' />");
+			}else{ // |
+				if(r1 > r2){
+					t = r1, r1 = r2, r2 = t;
+				}
+				L[i].className = "lineY";
+				offset = DOTA.F.getOffset(M[r1][c1], this.Table);
+				L[i].style.left = offset.x + "px";
+				L[i].style.top = offset.y + 18 + "px";
+				L[i].style.width = "31px";
+				L[i].style.height = (r2 - r1) * 35 + "px";
+				L[i].innerHTML = new Array(r2-r1+1).join("<img src='images/col.gif' /><br/>");
+			}
+		}
+		offset = DOTA.F.getOffset(M[PS.r][PS.c], this.Table);
+		L[3].style.left = offset.x + "px";
+		L[3].style.top = offset.y + "px";
+		offset = DOTA.F.getOffset(M[PE.r][PE.c], this.Table);
+		L[4].style.left = offset.x + "px";
+		L[4].style.top = offset.y + "px";
+		imgs = this.Line.getElementsByTagName("img");
+
+		L[3].innerHTML = L[4].innerHTML = "<img src='images/boom.gif'>";
+		for(i = 0; i < imgs.length; i++){
+			imgs[i].src = imgs[i].src;
+		}
+	},
+	//dir: 1,hor 2,ver
+	isLink : function(pt1, pt2, dir){ 
+		var M = this.Map, i, ret = true, r1, c1, r2, c2, dir, PS = this.ptStart, PE = this.ptEnd;
+		if(arguments.length == 3){
+			r1 = pt1.r, c1 = pt1.c;
+			r2 = pt2.r, c2 = pt2.c;
+		}else{
+			r1 = pt1, c1 = pt2;
+			r2 = arguments[3], c2 = arguments[4];
+		}
+		
+		if(dir == 2){
+			if(r1 > r2){
+				i = r1, r1 = r2, r2 = i;
+			}
+			for(i = r1; i <= r2; i++){
+				if(M[i][c1].img > 0 && !(i == PS.r && c1 == PS.c || i == PE.r && c1 == PE.c)){
+					ret = false;
+					break;
+				}
+			}
+		}else{
+			if(c1 > c2){
+				i = c1, c1 = c2, c2 = i;
+			}
+			for(i = c1; i <= c2; i++){
+				if(M[r1][i].img > 0 && !(r1 == PS.r && i == PS.c || r1 == PE.r && i == PE.c)){
+					ret = false;
+					break;
+				}
+			}
+		}
+		return ret;
+	},
+	findPath : function(PS, PE){
+		var M = this.Map, isFound = false, i ;
+		this.Path = [];
+		if(PS.r == PE.r && this.isLink(PS, PE, 1) || PS.c == PE.c && this.isLink(PS, PE, 2)){
+			this.Path = [PS.clone(), PE.clone()];
+			isFound = true;
+		}
+		if(!isFound){ // |_|
+			for(i = 0; i < this.Row; i++){
+				if(this.isLink(i, PS.c, 1, i, PE.c) && this.isLink(i, PS.c, 2, PS.r, PS.c)
+					&& this.isLink(i, PE.c, 2, PE.r, PE.c)){
+					this.Path = [PS.clone(), new Point(i, PS.c), new Point(i, PE.c), PE.clone()];
+					isFound = true;
+					break;
+				}
+			}
+		}
+		if(!isFound){ // 工
+			for(i = 0; i < this.Col; i++){
+				if(this.isLink(PS.r, i, 2, PE.r, i) && this.isLink(PS.r, i, 1, PS.r, PS.c)
+					&& this.isLink(PE.r, i, 1, PE.r, PE.c)){
+					this.Path = [PS.clone(), new Point(PS.r, i), new Point(PE.r, i), PE.clone()];
+					isFound = true;
+					break;
+				}
+			}
+		}
+		return isFound;
+	},
+	onClick : function(oEvent){
+		var td = oEvent.target.parentNode, offset = DOTA.F.getOffset(td, this.Table), M = this.Map;
+		if(!td || !td.img || this.gameStatus != Link.Status.Gaming){
+			return;
+		}				
+			
+		this.selStart.style.left = offset.x + "px";
+		this.selStart.style.top = offset.y + "px";
+		if(this.ptStart.r < 0){
+			this.ptStart.r = parseInt(offset.y / 35);
+			this.ptStart.c = parseInt(offset.x / 31);
+			this.playSound("sel");
+		}else{
+			
+			this.ptEnd.r = parseInt(offset.y / 35);
+			this.ptEnd.c = parseInt(offset.x / 31);
+			var PS = this.ptStart, PE = this.ptEnd;
+			
+			//同一方块
+			if(PS.r === PE.r && PS.c === PE.c){
+				this.playSound("sel");
+				return;
+			}
+			//检测图片是否相同
+			if(M[PS.r][PS.c].img != M[PE.r][PE.c].img){
+				PS.r = PE.r, PS.c = PE.c;
+				this.playSound("sel");
+				return;
+			}
+			//检测是否相连
+			var isFound = this.findPath(PS, PE);
+			if(isFound){
+				this.deleteBox();
+				this.playSound("boom");
+			}else{
+				this.playSound("sel");
+				PS.r = PE.r, PS.c = PE.c;
+			}
+		}
+	},
+	onMenu : function(oEvent, type){
+		switch(type.toLowerCase()){
+			case "start" : this.start(); break;
+			case "pause" : this.pause(); break;
+			case "end"	 : this.stop();  break;
+			case "exit"  : this.exit();  break;
+			default		 : this.showDialog(type); break;
+		}
+	},
+	getOpacity : function(){
+		return this.config.opacity;
+	},
+	setOpacity : function(val){
+		val = parseInt(val, 10);
+		if(val >= 1 && val <= 100){
+			this.config.opacity = val;
+			DOTA.F.setOpacity(this.Window, val);
+		}
+	},
+	getMapMode : function(){
+		return {lockMap: this.lockMap, mapIndex: this.mapIndex};
+	},
+	setMapMode : function(mode){
+		this.lockMap = mode.lockMap
+		this.mapIndex = mode.mapIndex;
+	},
+	closeDialog : function(){
+		this.dlg.hide();
+		this.pause();
+	},
+	exit : function(){
+		clearInterval(this.timerID1);
+		clearInterval(this.timerID2);
+		this.dispose();
+	},
+	dispose : function(){
+		this.Window.innerHTML = "";
+		document.body.removeChild(this.Window);
+		if(Link.SM2){
+			Link.Sound.dispose();
+			Link.BGSound.dispose();
+		}
+		this.dlg.dispose();
+	}
+};
+
+window.onload = function(){
+	Link.loadImage();
+};
+window.onunload = function(){
+	Link.dispose();
+};
+</script>
+</head>
+
+<body onselectstart="return false;" ondragstart="return false;">
+<!-- game -->
+<div id="link" style="display:none;">
+	<div id="titleWrap">
+    	<div id="title">JavaScript版连连看 v0.2</div>
+        <div id="gameMenu"></div>
+        <div id="closeButton"></div>
+    </div>
+    <div id="leftSlider">
+    	<ul id="mapList">
+        	<li><img title='双击地图开始' src='' border='0' /><div title="双击地图开始"></div></li>
+        	<li><img title='双击地图开始' src='' border='0' /><div title="双击地图开始"></div></li>
+        	<li><img title='双击地图开始' src='' border='0' /><div title="双击地图开始"></div></li>
+        	<li><img title='双击地图开始' src='' border='0' /><div title="双击地图开始"></div></li>
+        	<li><img title='双击地图开始' src='' border='0' /><div title="双击地图开始"></div></li>
+        </ul>
+        <div id="gameAreaWrap">
+            <div id="gameArea"></div>
+			<div id="gameStatus">
+            	<div id="countDown">倒计时：</div>
+                <div id="timeLine"><div id="timeLineImg"></div></div>
+                <div id="leftBox">剩余方块：<span></span></div>
+            </div>
+            <div id="gameMsg"><div id="score"></div></div>
+        </div>
+    </div>
+    <div id="rightSlider">
+    	<div id="userWrap">
+        	<div id="userHead"><img src="images/userHead/uh1.gif" id="uhImg" title="更换头像" /></div>
+            <div id="userInfo">
+            	<div id="nickName" >昵称:<span></span></div>
+                <div id="userScore">积分:<span></span></div>
+                <div id="userLevel">级别:<span></span></div>
+            </div>
+        </div>
+        <div id="property"><div id="compass"></div><div id="reset"></div></div>
+        <div id="mapInfo">
+        	<div id="mapImage"></div>
+            <div id="mapDetail">
+                <div>地图名称：<span></span></div>
+            	<div>地图难度：<span></span></div>
+            	<div>方块数量：<span></span></div>
+                <div>地图作者：<span></span></div>
+            </div>
+        </div>
+        <div id="scoreInfo">
+        	<div id="timeInfo" >已用时间：<span>&nbsp;</span></div>
+            <div id="comboInfo">最高连击：<span>&nbsp;</span></div>
+        </div>
+        <div id="controlButton">
+        	<div id="btnLine1"></div>
+            <div id="btnLine2"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="progressBar">
+	<div id="progressBar1"><div id="imgLoadMsg">正在加载图片...</div></div>
+    <div>&nbsp;</div>
+	<div id="progressBar2"><div id="soundLoadMsg">正在加载声音...</div></div>
+</div>
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-12765860-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+</body>
+</html>

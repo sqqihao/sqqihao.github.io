@@ -1,0 +1,205 @@
+html, body{
+	font-family:"ÐÂËÎÌå","Courier New"; color:#f8e070; cursor:url(images/link.cur), auto;
+}
+#link{
+	width:800px; height:600px; position:absolute;
+	background:url(images/linkBg.gif) no-repeat;
+}
+#titleWrap{
+	position:relative; height:30px; line-height:30px; background:url(images/icon.png) 10px 7px no-repeat;
+	padding-left:27px; font-weight:bold; color:#f8e070; z-index:200;
+}
+#title{
+	position:absolute; top:0px; left:30px; width:466px; height:25px;
+}
+#gameMenu{
+	position:absolute; top:3px; left:500px; width:260px; line-height:25px; z-index:200;
+}
+#closeButton{
+	position:absolute; top:3px; right:10px; width:23px; height:23px; line-height:23px;
+}
+#leftSlider{
+	float:left; width:610px; position:relative;
+}
+#rightSlider{
+	float:right; width:188px; position:relative;
+}
+#mapList{
+	margin-left:9px; width:596px; height:142px; overflow:hidden;
+}
+#mapList li{
+	float:left; width:119px; 
+}
+#mapList li img{
+	display:block; width:96px; height:56px; margin:35px auto 0px auto;
+}
+#mapList li div{
+	margin-top:18px; text-align:center; color:#fff; height:23px; line-height:23px; overflow:hidden;
+}
+#gameAreaWrap{
+	position:absolute; top:142px; height:420px; width:598px; overflow:hidden; margin-left:7px; 
+}
+#gameArea{
+	position:relative; left:5px; top:3px; width:589px; height:385px; background:#374D76; overflow:hidden;
+}
+#gameArea .select{
+	position:absolute; left:-50px; top:0px; width:29px; height:33px; overflow:hidden; border:1px dashed #000065;
+}
+#gameArea .lineContainer{
+	position:absolute; left:0px; top:0px; z-index:100;
+}
+#gameArea td, #gameArea .lineContainer img{
+	width:31px; height:35px; overflow:hidden; margin:0px; padding:0px;
+}
+.lineContainer{
+	position:relative;
+}
+.lineContainer div{
+	position:absolute; 
+}
+#gameStatus{
+	margin-top:10px; position:relative; font-weight:bold;
+}
+#gameStatus div{
+	position:absolute; line-height:22px; height:22px;
+}
+#gameStatus #countDown{
+	left: 10px;
+}
+#gameStatus #timeLine{
+	left:65px; background:url(images/line.bmp) no-repeat; width:380px;
+}
+#gameStatus #timeLine div{
+	left:16px; background:url(images/lineTime.bmp) repeat-x; width:0px;
+}
+#gameStatus #leftBox{
+	left:450px;
+}
+#gameMsg{
+	display:none; position:absolute; left:1px; top:0px; width:598px; height:420px; z-index:200;
+}
+#gameMsg div{
+	margin:318px auto 0px auto;width:156px; height:35px; text-align:center; background:#374D76;
+	font-weight:bold; font-size:30px; line-height:35px; font-family:Arial; letter-spacing:1px;
+}
+#gameAreaWrap .win{
+	background:url(images/win.gif) center 65px no-repeat;
+}
+#gameAreaWrap .lose{
+	background:url(images/lose.gif) center 65px no-repeat;
+}
+#gameAreaWrap .pause{
+	background:url(images/pauseBg.gif) center center no-repeat;
+}
+#gameAreaWrap .pause div{
+	display:none;
+}
+#userWrap{
+	margin-top:65px; margin-left:13px; height:60px; overflow:hidden;
+}
+#userHead{
+	float:left; width:40px; margin-right:10px; padding-top:10px;
+}
+#userInfo{
+	float:left; line-height:20px; color:#F8F8F8;
+}
+#property, #mapInfo, #scoreInfo, #controlButton{
+	position:absolute; left:5px;width:170px; border:0px solid #fff;
+}
+#property{
+	left:7px; top:158px; height:24px;
+}
+#property div{
+	position:absolute; width:24px; height:24px; left:0px; top:0px;
+}
+#property #compass{
+	background:url(images/compass.gif) -0px 0px no-repeat;
+}
+#property #reset{
+	left:25px; background:url(images/reset.gif) 0px 0px no-repeat;
+}
+#mapInfo{
+	left:18px; top:220px; height:175px;
+}
+#mapImage{
+	height:78px; width:145px;
+}
+#mapDetail{
+	line-height:21px; margin-top:4px;
+}
+#scoreInfo{
+	left:18px; top:424px; height:50px;
+}
+#scoreInfo span{
+	font-weight:bold; letter-spacing:1px;
+}
+#controlButton{
+	top:478px; height:80px;
+}
+/* buttons */
+#btnLine1 div, #btnLine2 div{
+	float:left; margin-right:1px; width:84px; height:40px; 
+}
+.btnSet{
+	background:url(images/btn_set.gif) no-repeat;
+}
+.btnSetHover{
+	background:url(images/btn_set.gif) -84px 0px no-repeat;
+}
+.btnSetDown{
+	background:url(images/btn_set.gif) -168px 0px no-repeat;
+}
+.btnStart{
+	background:url(images/btn_start.gif) no-repeat;
+}
+.btnStartHover{
+	background:url(images/btn_start.gif) -84px 0px no-repeat;
+}
+.btnStartDown{
+	background:url(images/btn_start.gif) -168px 0px no-repeat;
+}
+.btnSelMap{
+	background:url(images/btn_selMap.gif) no-repeat;
+}
+.btnSelMapHover{
+	background:url(images/btn_selMap.gif) -84px 0px no-repeat;
+}
+.btnSelMapDown{
+	background:url(images/btn_selMap.gif) -168px 0px no-repeat;
+}
+.btnOrder{
+	background:url(images/btn_order.gif) no-repeat;
+}
+.btnOrderHover{
+	background:url(images/btn_order.gif) -84px 0px no-repeat;
+}
+.btnOrderDown{
+	background:url(images/btn_order.gif) -168px 0px no-repeat;
+}
+.btnPause{
+	background:url(images/btn_pause.gif) no-repeat;
+}
+.btnPauseHover{
+	background:url(images/btn_pause.gif) -84px 0px no-repeat;
+}
+.btnPauseDown{
+	background:url(images/btn_pause.gif) -168px 0px no-repeat;
+}
+.btnExit{
+	background:url(images/btn_exit.gif) no-repeat;
+}
+.btnExitHover{
+	background:url(images/btn_exit.gif) -84px 0px no-repeat;
+}
+.btnExitDown{
+	background:url(images/btn_exit.gif) -168px 0px no-repeat;
+}
+.btnClose, .btnCloseHover, .btnCloseDown{
+	background:url(images/dota/close.bmp) no-repeat; width:23px; height:23px;
+}
+.btnCloseHover{
+	background:url(images/dota/close.bmp) -23px 0px no-repeat;
+}
+.btnCloseDown{
+	background:url(images/dota/close.bmp) -46px 0px no-repeat;
+}

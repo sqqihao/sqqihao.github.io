@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title></title>
+    <script src="./js/zepto.js"></script>
+    <script src="./js/underscore1.8.js"></script>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <!--
+    <script src="./js/backbone.js"></script>
+    -->
+</head>
+<style>
+    ul,#game,#effect{
+        list-style: none;
+        position: relative;
+        padding: 0;
+        font-size: 14px;
+        margin: 0 auto;
+    }
+    .li{
+        width: 40px;
+        height: 40px;
+        float: left;
+        cursor: pointer;
+        text-align: center;
+        line-height: 40px;
+    }
+    .li.active{
+        background-color: #f9f9f9;
+    }
+    .bg1{
+        /*background: #2ECC71;*/
+    }
+    .bg2{
+        /*background: #3498DB;*/
+    }
+    .bg3{
+        /*background: #9B59B6;*/
+    }
+    .bg4{
+        /*background: #F1C40F;*/
+    }
+    .bg5{
+        /*background: #F1C40F;*/
+    }
+    .bg6{
+        /*background: #F1C40F;*/
+    }
+    /*
+    .bg1:before{
+        content:"1"
+    }
+    .bg2:before{
+        content:"2"
+    }
+    .bg3:before{
+        content:"3"
+    }
+    .bg4:before{
+        content:"4"
+    }
+    */
+    #game:after{
+        content:" ";
+        display: block;
+        clear:both;
+    }
+</style>
+<body>
+    <script id="li-tpl" type="text/template">
+        <% _.each(data, function(item, y) {%>
+            <%_.each(item, function(className, x) {%>
+                <li id="<%= x %><%= y %>" class="li bg<%=className%> glyphicon  <%= window.getIcon(className) %>" data-y="<%= y %>" data-x="<%= x %>"></li>
+            <%})%>
+        <% }) %>
+    </script>
+    <div class="container ">
+        <div class="row" style="width:80%;margin:0 auto;">
+            <h3>得分<span class="label label-default" id="score">0</span></h3>
+        </div>
+    </div>
+    <div class="container">
+        <ul id="effect">
+
+        </ul>
+        <ul id="game">
+
+        </ul>
+    </div>
+    <script type="text/javascript">
+        var cfg = {
+            width : 8,
+            height : 8
+        };
+        /**
+         * 1: glyphicon-asterisk
+         * 2: glyphicon-arrow-down
+         * 3: glyphicon-send
+         * 4: glyphicon-th
+         * 5: glyphicon-apple
+         * 6: glyphicon-gift
+        */
+         window.getIcon = function(className) {
+             switch(className) {
+                 case "1" :
+                     return "glyphicon-asterisk"
+                 case "2" :
+                     return "glyphicon-arrow-down";
+                 case "3" :
+                     return "glyphicon-send";
+                 case "4" :
+                     return "glyphicon-th";
+                 case "5" :
+                     return "glyphicon-apple";
+                 case "6" :
+                     return "glyphicon-gift"
+             }
+        }
+    </script>
+    <script type="text/javascript">
+        function MapModel(w, h, score) {
+            this.map = [];
+            this.score = score;
+            this.w = w;
+            this.h = h;
+            this.init();
+        };
+        $.extend( MapModel.prototype, {
+            //根据配置生成x*y的二维数组;
+            init : function() {
+                var data = new Array(this.w);
+                for(var i=0; i<data.length; i++ ) {
+                    data[i] = new Array(this.h);
+                    for(j=0; j<data[i].length; j++ ) {
+                        // 1 ， 2 ， 3,  4, 5, 6;
+                        data[i][j] = this.newUnit();
+                    };
+                };
+                this.map = data;
+            },
+            //返回数据;
+            get : function() {
+                return this.map;
+            },
+            isNearly : function(xy, xxyy) {
+                xy = [ parseInt(xy[0]) , parseInt(xy[1])];
+                xxyy = [ parseInt(xxyy[0]) , parseInt(xxyy[1])];
+                if( xy[0] == xxyy[0] && ((xy[1]+1 === xxyy[1])||(xy[1]-1 === xxyy[1])) || xy[1] == xxyy[1] && ((xy[0]+1 === xxyy[0]) || (xy[0]-1 === xxyy[0])) ) {
+                    return true;
+                };
+                return false;
+            },
+            //把地图中xy位置置空;
+            fill : function(x, y) {
+                this.map[y][x] = 0;
+            },
+            fillALL : function() {
+                for(var i= this.map.length-1; i>=0; i--) {
+                    for(var j= 0, len = this.map[i].length;j<len; j++) {
+                        if( this.map[i][j] == 0 ) {
+                            var val = this.newUnit();
+                            $("<li>").css({left:(40*j+14),top:(40*i-14),fontSize:"40px"}).html( val ).appendTo("#effect").animate( {left:40*j+20,top:40*i, fontSize:"14px", position:"absolute"},400,"linear", function(){
+                                $(this).remove();
+                            });
+                            this.map[i][j] = val;
+                        };
+                    };
+                };
+            },
+            clear : function() {
+                for(var z=0; z<16; z++) {
+                    for(var i= this.map.length-1; i>0; i--) {
+                        for(var j= 0, len = this.map[i].length;j<len; j++) {
+                            if(this.map[i][j] == 0) {
+                                //把上面一个值赋值给当前的
+                                this.map[i][j] = this.map[i-1][j];
+                                this.map[i-1][j] = 0;
+                            };
+                        };
+                    };
+                }
+            },
+            /**
+             * 替换对应位置this.map
+             * */
+            change : function(position0, position1) {
+                var temp = this.map[position0[1]][position0[0]];
+                this.map[position0[1]][position0[0]] = this.map[position1[1]][ position1[0]];
+                this.map[position1[1]][position1[0]] = temp;
+            },
+            //清除data里面横向或者竖向三个相连的数据;
+            /**
+             * 消除成功
+             * return true;
+             * 消除失败
+             * return false;
+             * */
+            eliminate : function() {
+                //如果有被消除的话;返回为true, 默认为false;
+                var result = false;
+                function eliminateFn (arr) {
+                    for(var i=0; i<arr.length; i++ ) {
+                        arr[i] = (arr[i].join("").replace(/([1-6]{1})\1{2,}/gi,function($0){
+                            result = true;
+                            return (new Array($0.length+1)).join("0")
+                        })).split("");
+                    };
+                    return arr;
+                };
+                //消除水平方向
+                eliminateFn(this.map);
+                //把竖方向和水平方向进行替换;
+                var horizon = [];
+                //i 是y， j是x;
+                for(var i=0; i<this.map.length; i++ ) {
+                    for(var j=0 ; j< this.map[i].length; j++ ){
+                        horizon[j] = horizon[j] || [];
+                        horizon[j][i] = this.map[i][j];
+                    };
+                };
+                //消除水平方向
+                eliminateFn(horizon);
+                //i 是y， j是x;
+                for(var i=0; i<horizon.length; i++ ) {
+                    for(var j=0 ; j< horizon[i].length; j++ ){
+                        this.map[j] = this.map[j] || [];
+                        this.map[j][i] = horizon[i][j];
+                    };
+                };
+                this.addScore();
+                this.clear();
+                this.fillALL();
+                //如果有被消除， 那么重新开始消除， 直到消除完毕；
+                if(result === true) {
+                    this.eliminate();
+                };
+                //返回true或者false;
+                return result;
+            },
+            /**
+             * @prarm
+             * return 1 || 2 || 3 || 4;
+            **/
+            newUnit : function() {
+                return String(Math.floor( Math.random()*6 ) + 1);
+            },
+            addScore : function() {
+                var map = this.map;
+                for(var i=0; i<map.length; i++) {
+                    for(var j=0; j<map[i].length; j++ ) {
+                        if( map[i][j] == 0) {
+                            this.score.add();
+                            $("<li>").css( {left:40*j+10,top:40*i, fontSize:"14px", position:"absolute"}).html( "+1" ).appendTo("#effect").animate({left:(40*j),top:(40*i),fontSize:"40px"},400,"linear", function(){
+                                $(this).remove();
+                            });
+                        };
+                    };
+                };
+            }
+        });
+
+        //分数的构造器;
+        function Score(el) {
+            this.score = 0;
+            this.el = el;
+        };
+        $.extend(Score.prototype, {
+            add : function() {
+                this.el.innerHTML = ++this.score + "分";
+            }
+        });
+
+        //我们会把数据放到View构造函数中;
+        function View( data ) {
+            this.data = data;
+            this.dataMap = data.map;
+        };
+        $.extend(View.prototype, {
+            xy : undefined,
+            //调用renderHTML把数据转化为视图
+            //绑定事件
+            init : function() {
+                this.event();
+                //把默认可消除的消除;
+                this.data.eliminate();
+                this.renderHTML();
+            },
+            renderHTML : function(data) {
+                var str = _.template( $("#li-tpl").html() )( {data :this.dataMap} );
+                $("#game").html( str).css("width",40*cfg.width);
+                $("#effect").css("width",40*cfg.width);
+            },
+            //为界面中的元素绑定事件;
+            event : function() {
+                $("#game").delegate(".li", "click", this.clickEvent.bind(this));
+            },
+            clickEvent : function(ev) {
+                var prevXY = this.xy;
+                var nowXY = this.xy = ev.target.dataset.x + "____" +ev.target.dataset.y;
+                $("li.active").removeClass("active");
+                $(ev.target).addClass("active");
+                //不存在XY的话， 说明是第一次点击
+                if( !prevXY )return;
+                var xy = prevXY.split("____");
+                var xxyy = nowXY.split("____");
+                if( !this.data.isNearly(xy,xxyy) ) {
+                    return;
+                };
+                //$(this);
+                //如果有玩意儿被消除的话；
+                this.data.change( xy, xxyy );
+                if( this.data.eliminate() ) {
+                    this.renderHTML( this.dataMap );
+                    //上一次点击的xy要清空;
+                    this.xy = undefined;
+                }else{
+                    //把数据返回成原来的样子
+                    this.data.change( xxyy, xy );
+                    //如果没有被消除的话；
+                    //神马事情都不做;
+                };
+            }
+        });
+
+        $(function() {
+            window.data = new MapModel( cfg.width, cfg.height, new Score( document.getElementById("score")) );
+            data.clear();
+            var view = new View( data );
+            view.init();
+        });
+    </script>
+</body>
+</html>

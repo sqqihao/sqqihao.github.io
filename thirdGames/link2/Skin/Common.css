@@ -1,0 +1,20 @@
+html, body{
+	padding:0px; margin:0px; font-size:12px; background:#888; color:#FFF; height:100%;
+	font:12px/1.8 "Courier New", Courier, monospace;
+	-moz-user-select: none; -khtml-user-select: none; user-select: none; line-height:24px;
+}
+ul, li, ol, p, form, h1, h2{
+	padding:0px; margin:0px;
+}
+ul, li, ol{
+	list-style-type:none; 
+}
+#progressBar{
+	position:absolute; top:150px; left:50%; margin-left:-150px; color:#fff; width:310px;
+}
+#imgLoadMsg, #soundLoadMsg{
+	text-align:center;
+}
+#progressBar2{
+	display:none;
+}

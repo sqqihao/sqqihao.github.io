@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>选项设置</title>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/Option.css"/>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/DOTA_All.css"/>
+<style type="text/css">
+#container{
+	width:272px; margin:5px auto; margin-top:10px;
+}
+#btn{
+	padding-top:10px;
+}
+#btn div{
+	float:left; margin-right:15px;
+}
+</style>
+<script type="text/javascript" src="../Scripts/Base.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/CheckBox.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/Button.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/drag.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/Slider.js" charset="utf-8"></script>
+<script type="text/javascript">
+window.onload = function(){
+	//init
+	var opt = parent.getOption(), opacity = parent.getOpacity();
+	DOTA.$("rdoMusic").checked = opt.sound;
+	DOTA.$("rdoBGMusic").checked = opt.bgSound;
+	if(opt.speed == parent.Link.Speed.Slow){
+		DOTA.$("rdoSlow").checked = true;
+	}else if(opt.speed == parent.Link.Speed.Normal){
+		DOTA.$("rdoNormal").checked = true;
+	}else{
+		DOTA.$("rdoFast").checked = true;
+	}
+	
+	new DOTA.CheckBox({contentEl: "container"});
+	new DOTA.Slider({container: "bgOpacity", size:1.5, value: parent.getOpacity(),
+		onChange: function(val){ 
+			parent.setOpacity(val);
+	}});
+	
+	new DOTA.Button({text: "确 定", onClick : function(){
+		parent.setOption({
+			sound 	: DOTA.$("rdoMusic").checked,
+			bgSound : DOTA.$("rdoBGMusic").checked,
+			speed 	: (DOTA.$("rdoSlow").checked ? 3 : ( DOTA.$("rdoNormal").checked ? 2 : 1))
+		});
+	}}).renderTo(DOTA.$("btn"));
+	
+	new DOTA.Button({text: "取 消", onClick : function(){
+		parent.setOpacity(opacity);
+		parent.closeDialog();
+	}}).renderTo(DOTA.$("btn"));
+};
+</script>
+</head>
+
+<body>
+<div id="container">
+	<table width="270" border="0" cellpadding="2" cellspacing="0">
+       <tr>
+        <td width="70" align="right">窗体透明：</td>
+        <td width="200" id="bgOpacity"></td>
+      </tr>
+      <tr>
+        <td width="70" align="right">游戏音效：</td>
+        <td width="200" >
+            <label class="DOTA_CheckBox" for="rdoMusic"><input type="checkbox" id="rdoMusic" name="rdoMusic" checked="checked" /> &nbsp;</label>
+        </td>
+      </tr>
+      <tr>
+        <td width="70" align="right">背景音乐：</td>
+        <td width="200">
+       	  	<label class="DOTA_CheckBox" for="rdoBGMusic"><input type="checkbox" id="rdoBGMusic" name="rdoBGMusic" checked="checked" /> &nbsp;</label>
+        </td>
+      </tr>
+      <tr>
+        <td align="right">游戏速度：</td>
+        <td>
+            <label class="DOTA_Radio" for="rdoSlow"><input type="radio" id="rdoSlow" name="rdoSpeed" />慢速</label>
+            <label class="DOTA_Radio" for="rdoNormal"><input type="radio" id="rdoNormal" name="rdoSpeed" checked="checked" />中速</label>
+            <label class="DOTA_Radio" for="rdoFast"><input type="radio" id="rdoFast" name="rdoSpeed" />快速</label>
+        </td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td id="btn"></td>
+      </tr>
+    </table>
+
+</div>
+</body>
+</html>

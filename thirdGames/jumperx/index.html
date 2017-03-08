@@ -1,0 +1,90 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:og="http://ogp.me/ns#"
+      xmlns:fb="https://www.facebook.com/2008/fbml">
+<head>
+
+<meta property="og:title" content="JumperX" />
+<meta property="og:description" content="A Parachute Jumping Game. HTML5 Game by O4studio.com" />
+<meta property="og:image" content="http://www.o4studio.com/play/jumperx/fb/jumperx.png" />
+<meta property="og:type" content="game"/>
+<meta property="og:site_name" content="O4STUDIO"/>
+<meta property="fb:app_id" content="116744791813700" />
+<meta property="og:url" content="http://www.o4studio.com/play/jumperx/"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>JumperX</title>
+<script language="javascript" src="encode.js" type="text/javascript"></script>
+<script language="javascript" src="maz.engine/maz.engine.core.game.js" type="text/javascript"></script>
+<script language="javascript" src="game.js" type="text/javascript"></script>
+<script language="javascript" src="comm.fb.js" type="text/javascript"></script>
+
+
+<style>
+body {
+	font-family: verdana;
+	font-size: 10px;
+	color:#FFFFFF;
+	background-color: #000000;
+	overflow:hidden;
+	padding : 0;
+	margin : 0;
+}
+.help {
+	font-size: 12px;
+	font-weight: bold;
+	color: #6CBFF1;
+}
+</style>
+</head>
+<body >
+<table align=center>
+	<tr>
+		<td id="stats" style="border: 1px solid #FFFFFF; width:190px">
+			<table><tbody><tr><td><img src="images/mazhar.jpg"></td><td>Mazhar</td></tr>
+			<tr><td>&nbsp;</td>
+			<td height="25px" id="m_mazhar">
+				&nbsp;
+			</td></tr>
+			<tr><td><img src="images/jolie.jpg"></td><td>Jolie</td></tr>
+			<tr>
+			<td>&nbsp;</td>
+			<td height="25px" id="m_jolie">&nbsp;
+			</td></tr>
+			<tr><td><img src="images/pit.jpg"></td><td>Pit</td></tr>
+			<tr><td>&nbsp;</td>
+			<td height="25px" id="m_pit">&nbsp;
+			</td></tr>
+			<tr><td><img src="images/tom.jpg"></td>
+			<td>Tom</td></tr>
+			<tr><td>&nbsp;</td>
+			<td height="25px" id="m_tom">&nbsp;</td></tr></tbody></table>
+		</td>
+		<td background-color:>
+			<canvas id='gcanvas' width=320 height=480 style="border: 1px solid #FFFFFF; background-color:#6CBFF1">Your browser does not support HTML5 canvas</canvas>
+		</td>
+	</tr>
+	<tr>
+		<td colspan=2 align=center class="help">
+			<br>
+			Press "X"/click/tap to Jump when signal is green<br> When you are falling press "X"/click/tap again to open parachute.
+			<br> <!-- input type="button" value="Invite Friends" onClick="FacebookInviteFriends()" /> <input type="button" value="Publish" onClick="sendBrag()" / -->
+
+			<div style="text-align:center;clear:both">
+<script src="/gg_bd_ad_720x90.js" type="text/javascript"></script>
+<script src="/follow.js" type="text/javascript"></script>
+</div>
+			</td>
+	</tr>
+</table>
+
+<script>
+
+window.onload = function () {
+	//enableMobile();
+	loadGameResources();
+}
+</script>
+</body>
+
+</html>

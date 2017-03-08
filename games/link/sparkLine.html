@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>showSparkLine</title>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400">
+        <p>Your browserdoes not support the canvas element.</p>
+    </canvas>
+    <script>
+
+        var elCan = document.getElementById("canvas");
+        function spark(ctx) {
+            function showAndClear(arr, lineWidth) {
+                ctx.beginPath();
+                ctx.lineJoin = "round";
+                ctx.lineWidth = lineWidth;
+                ctx.shadowColor = "rgba(241, 196, 15, 0.41)";
+                ctx.shadowOffsetX = 1;
+                ctx.shadowOffsetY = 1;
+                ctx.shadowBlur = 1;
+                for(var i=0; i<arr.length-1; i++) {
+                    var xy = arr[i];
+                    var nextXY = arr[i+1]
+                    ctx.moveTo(xy.x, xy.y);
+                    ctx.lineTo(nextXY.x, nextXY.y);
+                };
+                ctx.stroke();
+            };
+            var ctx = elCan.getContext("2d");
+            ctx.strokeStyle = "#F1C40F";
+            var lineWidthArr = [1,2,1,2,1,3,1,3,1];
+            var len = lineWidthArr.length;
+            var times = 400, addTimes = 200;
+            while(len--) {
+                (function(len){
+                    setTimeout(function() {
+                        ctx.clearRect(0,0,400,400);
+                        showAndClear([{x:80,y:40},{x:80,y:40},{x:40,y:40},{x:40,y:40}], lineWidthArr[len]);
+                    }, times);
+                    times += addTimes;
+                })(len)
+            };
+        };
+        spark( elCan );
+        //生成sparkline，指定几个位置, 清空;
+    </script>
+</body>
+</html>

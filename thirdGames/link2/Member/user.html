@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>编辑用户信息</title>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/Option.css"/>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/DOTA_All.css"/>
+<style type="text/css">
+<style type="text/css">
+html, body{
+	margin:0px; padding:0px; font-size:12px; color:#eee; overflow:hidden;
+}
+.text{
+	border:1px solid #2B4A84; background:#E4F4FD; color:#2B4A84; height:17px; line-height:16px;
+}
+#container{
+	margin:3px;
+}
+#tbImg td{
+	border:1px solid #506DA9;
+}
+#button{
+	padding-top:10px;
+}
+#button div{
+	float:left; margin-right:20px;
+}
+</style>
+<script type="text/javascript" src="../Scripts/Base.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/Button.js" charset="utf-8"></script>
+<script type="text/javascript">
+var User = {
+	init : function(user){
+		var i, tb = DOTA.$("tbImg"), prevTD = null, self = this;
+		
+		DOTA.$("userName").value = user.Name;
+		this.head = user.UserHead;
+		
+		for( i = 0; i < 5; i++){
+			(function(i){
+				tb.rows[0].cells[i].onclick = function(){
+					if(prevTD){
+						prevTD.style.border = "1px solid #506DA9";
+					}
+					this.style.border = "1px solid #EED435";
+					prevTD = this;
+					self.head = i + 1;
+				};
+			})(i);
+			if(i + 1 == self.head){
+				tb.rows[0].cells[i].style.border = "1px solid #EED435";
+				prevTD = tb.rows[0].cells[i];
+			}
+		}
+	},
+	toObject : function(){
+		return {Name: DOTA.$("userName").value, UserHead: this.head};
+	}
+};
+window.onload = function(){
+	new DOTA.Button({text: "确 定", onClick : function(){
+		parent.setUserInfo(User.toObject());
+		parent.closeDialog();
+	}}).renderTo(DOTA.$("button"));
+	
+	new DOTA.Button({text: "取 消", onClick : function(){
+		parent.closeDialog();
+	}}).renderTo(DOTA.$("button"));
+	
+	User.init(parent.getUserInfo());
+};
+</script>
+</head>
+
+<body>
+<div id="container">
+	<table width="330" border="0" cellpadding="5" cellspacing="0">
+      <tr>
+        <td width="40" align="right">昵称：</td>
+        <td width="250"><input type="text" class="text" name="userName" id="userName" maxlength="12" /></td>
+      </tr>
+      <tr>
+        <td align="right">头像：</td>
+        <td><table width="240" border="0" cellpadding="5" cellspacing="0" id="tbImg">
+          <tr>
+            <td><img src="../Images/UserHead/uh1.gif" border="0" /></td>
+            <td><img src="../Images/UserHead/uh2.gif" border="0" /></td>
+            <td><img src="../Images/UserHead/uh3.gif" border="0" /></td>
+            <td><img src="../Images/UserHead/uh4.gif" border="0" /></td>
+            <td><img src="../Images/UserHead/uh5.gif" border="0" /></td>
+          </tr>
+        </table></td>
+      </tr>
+      <tr>
+        <td>&nbsp;</td>
+        <td id="button"></td>
+      </tr>
+    </table>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,76 @@
+@charset "UTF-8";
+table{
+    border-collapse: collapse;
+    margin:10px auto;
+}
+td{
+    width:20px;
+    height:20px;
+    /**
+    直接为td添加border就可以为一整个table添加外边框了;
+    **/
+    border:1px solid #eee;
+}
+td.block{
+    background: #be95ff;
+}
+/*移动端的样式处理*/
+.operate-bar{
+    font-size:30px;
+}
+.height20percent{
+    height:30%;
+}
+.height30percent{
+    height:30%;
+}
+.height40percent{
+    height:40%;
+}
+.height100percent{
+    height:100%;
+}
+.font30{
+    font-size:30px;
+    color:#34495e;
+}
+.animated {
+    -webkit-animation-duration: 1s;
+    animation-duration: 1s;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% {
+        -webkit-animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+        animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+        -webkit-transform: translate3d(0,0,0);
+        transform: translate3d(0,0,0);
+    }
+
+    40%, 43% {
+        -webkit-animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+        animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+        -webkit-transform: translate3d(0, -30px, 0);
+        transform: translate3d(0, -30px, 0);
+    }
+
+    70% {
+        -webkit-animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+        animation-timing-function: cubic-bezier(0.755, 0.050, 0.855, 0.060);
+        -webkit-transform: translate3d(0, -15px, 0);
+        transform: translate3d(0, -15px, 0);
+    }
+
+    90% {
+        -webkit-transform: translate3d(0,-4px,0);
+        transform: translate3d(0,-4px,0);
+    }
+}
+.bounce {
+    -webkit-animation-name: bounce;
+    animation-name: bounce;
+    -webkit-transform-origin: center bottom;
+    transform-origin: center bottom;
+}

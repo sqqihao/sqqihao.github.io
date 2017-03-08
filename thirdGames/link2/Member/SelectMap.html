@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>选图</title>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/Option.css"/>
+<link rel="stylesheet" type="text/css" href="../Skin/QQ/DOTA_All.css"/>
+<style type="text/css">
+a{
+	text-decoration:none; color:#fff;
+}
+#container{
+	padding-left:13px; padding-top:6px;
+}
+#mapType{
+	height:30px; overflow:hidden;
+}
+#mapType div{
+	float:left; margin-right:13px;
+}
+#mapType #type{
+	margin-right:60px;
+}
+#mapList{
+	margin-top:4px; 
+}
+#mapList #map li{
+	float:left; width:103px; height:62px; background:#506DA9;
+	border:1px solid #506DA9; padding:1px;
+}
+#mapList #map img{
+	margin-left:3px; margin-top:1px;
+}
+#mapList #page{
+	clear:both; height:22px; line-height:22px; text-align:center;
+}
+#mapList #page a, #mapList #page span{
+	display:inline-block; line-height:16px; padding:2px; padding-left:4px; padding-right:4px; margin-right:5px;
+}
+#mapList #page span b{
+	color:#F8E070;
+}
+#mapList #page a:hover{
+	background:#eee; color:#506DA9;
+}
+#mapList #page .current{
+	font-weight:bold; color:#F8E070;
+}
+#mapList #page .gray{
+	color:#aaa;
+}
+#mapList #page a.gray:hover{
+	background:#506DA9; color:#aaa;
+}
+</style>
+<script type="text/javascript" src="../Scripts/Base.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/CheckBox.js" charset="utf-8"></script>
+<script type="text/javascript" src="../Scripts/Button.js" charset="utf-8"></script>
+<script type="text/javascript">
+var MapList = {
+	init : function(lockMap, mapIndex){
+		this.map = parent.getMap();
+		this.pageSize = 16;
+		this.mapCount = this.map.length;
+		this.pageCount = parseInt((this.mapCount - 1) / this.pageSize) + 1;
+		this.prevImg = null;
+		this.lockMap = lockMap || false;
+		this.mapIndex = mapIndex || -1;
+		this.pageIndex = parseInt((mapIndex - 1) / this.pageSize) + 1;
+		
+		this.initHtml();
+		this.showMap();
+		this.showPage();
+	},
+	initHtml : function(){
+		var html = new Array(17).join("<li><img src='' border='0' width='96' height='56'></li>");
+		DOTA.$("map").innerHTML = html;
+		
+		this.imgs = DOTA.$("map").getElementsByTagName("img");
+		var self = this, imgs = DOTA.$("map").getElementsByTagName("li"), index;
+		for(var i = 0; i < this.imgs.length; i++){
+			(function(i){
+				imgs[i].onclick = function(){
+					index = i + (self.pageIndex - 1) * self.pageSize
+					if(self.lockMap && index < self.mapCount){
+						if(self.prevImg){
+							self.prevImg.style.border = "1px solid #506DA9";
+						}
+						this.style.border = "1px solid #EED435";
+						self.prevImg = this;
+						self.mapIndex = index;
+					}
+				};
+			})(i);
+			index = i + (self.pageIndex - 1) * self.pageSize;
+			if(index  == this.mapIndex){
+				imgs[i].style.border = "1px solid #EED435";
+				self.prevImg = imgs[i];
+			}
+		}
+	},
+	showPage : function(){
+		var html = [];
+		html.push("<span>共 <b>");
+		html.push(this.mapCount + "</b> 个 每页显示 <b>" + this.pageSize + "</b> 个</span>");
+		if(this.pageIndex == 1){
+			html.push("<a href='javascript:void(0);' class='gray'>上一页</a>");
+		}else{
+			html.push("<a href=\"javascript:goPage('prev');void(0);\">上一页</a>");
+		}
+		for(var i = 1; i <= this.pageCount; i++){
+			if(i == this.pageIndex){
+				html.push("<a href='javascript:void(0);' class='current'>" + i + "</a>");
+			}else{
+				html.push("<a href='javascript:goPage(" + i + ");void(0);'>" + i + "</a>");
+			}
+		}
+		if(this.pageIndex == this.pageCount){
+			html.push("<a href='javascript:void(0);' class='gray'>下一页</a");
+		}else{
+			html.push("<a href=\"javascript:goPage('next');void(0);\">下一页</a>");
+		}
+		DOTA.$("page").innerHTML = html.join("");
+	},
+	goPage : function(page){
+		switch(page){
+			case "prev":
+				this.pageIndex = this.pageIndex > 1 ? this.pageIndex - 1 : 1;
+				break;
+			case "next":
+				this.pageIndex = this.pageIndex < this.pageCount ? this.pageIndex + 1 : this.pageCount;
+				break;
+			default:
+				if(page >= 1 && page <= this.pageCount){
+					this.pageIndex = page;
+				}
+				break;
+		}
+		this.showMap();
+		this.showPage();
+	},
+	showMap : function(){
+		var i, n, imgs = this.imgs, start = (this.pageIndex - 1) * this.pageSize, 
+			 map = this.map, end = Math.min(start + this.pageSize, this.mapCount);
+		for(i = start, n = 0; i < end ; i++, n++){
+			imgs[n].src = "../Images/Map/Map" + map[i].id + ".gif";
+		}
+		for(; n < this.pageSize; n++){
+			imgs[n].src = "../Images/Map/null.gif";
+		}
+	},
+	dispose : function(){
+	}
+};
+function changeType(n){
+	if(n == 1){
+		DOTA.$("mapList").style.display = "none";
+		MapList.lockMap = false;
+	}else{
+		DOTA.$("mapList").style.display = "";
+		MapList.lockMap = true;
+	}
+}
+function goPage(page){
+	MapList.goPage(page);
+}
+window.onload = function(){
+	var mode = parent.getMapMode();
+	if(mode.lockMap){
+		DOTA.$("rdoLock").checked = true;
+		DOTA.$("mapList").style.display = "";
+	}else{
+		DOTA.$("rdoRandom").checked = true;
+		DOTA.$("mapList").style.display = "none";
+	}
+	new DOTA.CheckBox({contentEl: "mapType"});
+	new DOTA.Button({text: "确 定", onClick : function(){
+			if(DOTA.$("rdoRandom").checked){
+				parent.setMapMode([false, -1]);
+			}else{
+				if(MapList.mapIndex == -1){
+					alert("请选择地图!");
+					return;
+				}
+				parent.setMapMode({lockMap: true, mapIndex: MapList.mapIndex});
+			}
+		}}).renderTo(DOTA.$("button"));
+	new DOTA.Button({text: "取 消", onClick : function(){
+			parent.closeDialog();
+		}}).renderTo(DOTA.$("button"));
+	
+	MapList.init(mode.lockMap, mode.mapIndex);
+};
+</script>
+</head>
+
+<body>
+<div id="container">
+	<div id="mapType">
+    	<div id="type">地图模式:
+        	<label class="DOTA_Radio" for="rdoRandom"><input type="radio" id="rdoRandom" name="rdoType" value="1" onclick="changeType(1)" />随机地图</label>
+        	<label class="DOTA_Radio" for="rdoLock"><input type="radio" id="rdoLock" name="rdoType" value="1" onclick="changeType(2)" />指定地图</label>
+        </div>
+        <div id="button"></div>
+    </div>
+    <div id="mapList">
+    	<ul id="map"></ul>
+        <div id="page"></div>
+    </div>
+</div>
+</body>
+</html>

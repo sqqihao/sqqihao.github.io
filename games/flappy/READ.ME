@@ -1,0 +1,84 @@
+M
+	{	
+		//
+		easy, normal, hard;
+	}
+
+C 	{
+		//controller
+		init : 	fn {
+			1 : get model;
+			2 : new Bird
+			3 : new Pipe setInterval(1000);
+			bird.fly;
+			pipe.moveLeft;
+				when pipe over move , do destory;
+		}
+	}
+
+B
+	{
+		background
+		//rotate
+		r
+		//x
+		x
+		//y
+		y
+	}
+
+	//collision to tube
+	collision : fn
+
+	//to jump when user operator
+	jump : fn
+		speedY = 0;
+	//when the game is start
+	fly : fn
+		speedY += 4;
+		y+=i;
+	//
+	shock swing
+
+Score
+	{
+		score
+	}
+
+	draw : fn
+	addScore fn
+
+P 
+	{
+		background
+		x
+		y
+		w
+		h
+
+		x1
+		y1
+		w1
+		h1
+
+		score
+	}
+
+	// move the pipe
+	moveLeft : fn
+	// move to right
+	moveRight : fn
+
+	// destory pipe
+	destory : fn
+
+	//is over position , run score.addScore;
+	onOver : fn
+
+
+//https://github.com/quietshu/flappybird/blob/master/WeixinApi.js
+weChat
+
+weiBo
+//http://open.weibo.com/wiki/Weibo-JS_V2
+

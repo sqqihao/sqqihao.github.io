@@ -1,0 +1,562 @@
+<!--
+加了这个玩意儿，导致获取 document.documentElement.clientWidth; document.documentElement.clientHeight; 有问题？
+<!DOCTYPE html>
+-->
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>黑洞地球保卫战</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+</head>
+<body>
+<style>
+    *{
+        margin:0;
+        padding:0;
+    }
+</style>
+<canvas id="canvas"></canvas>
+
+<script src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/numeric/1.2.6/numeric.js"></script>
+<script src="black-hole.min.js"></script>
+<!--
+<script src="zepto.js"></script>
+-->
+<script src="underscore1.8.js"></script>
+<script src="plugin.js"></script>
+<script>
+    //创建TaskList;
+    var TaskList = function() {this.list = [], this.timer = null};
+    TaskList.tId = 0;
+    TaskList.prototype.addTask = function (fn) {
+        fn.tId = TaskList.tId++;
+        if(typeof fn === "function")this.list.push(fn);
+        return this;
+    };
+    TaskList.prototype.removeTask = function(fn) {
+        var len = 0;
+        while(len--){
+            if(fn === this.list[len] || fn.tId === this.list[len].tId) {
+                this.list.splice(len,1);
+            };
+        };
+    };
+    TaskList.prototype.run = function() {
+        for(var i=0; i<this.list.length; i++ ){
+            this.list[i]();
+        }
+    };
+    TaskList.prototype.setInterval = function ( time ) {
+        this.timer = setInterval(this.run.bind(this), time);
+    };
+    TaskList.prototype.clearInterval = function() {
+        clearInterval( this.timer );
+    };
+
+
+    var util = {
+        isMobile : typeof document.ontouchstart === "object" ? true : false,
+        loadImgs: function(arr, cb) {
+            var obj = {};
+            for (var i = 0; i < arr.length; i++) {
+                (function(i) {
+                    var img = new Image();
+                    img.onload = function () {
+                        console.log(this.src);
+                        obj[arr[i]] = img;
+                        done();
+                    }
+                    img.src = arr[i];
+                })(i);
+            };
+            var len = arr.length;
+            function done(  ){
+                if( --len===0 ) {
+                    cb( obj );
+                };
+            };
+            return obj;
+        }
+    };
+
+    //计算运动的库
+    /////////////////////////////////////////////////////////////////////////////
+    //Cubic , Quart, Quint, Sine, Expo, Bounce , Back, Elastic, Circ, linear, Quad
+    var Tween = {
+        Linear: function(t,b,c,d){ return c*t/d + b; },
+        Quad: {
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return -c *(t/=d)*(t-2) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t + b;
+                return -c/2 * ((--t)*(t-2) - 1) + b;
+            }
+        },
+        Cubic: {
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c*((t=t/d-1)*t*t + 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t*t + b;
+                return c/2*((t-=2)*t*t + 2) + b;
+            }
+        },
+        Quart: {
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t*t*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return -c * ((t=t/d-1)*t*t*t - 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+                return -c/2 * ((t-=2)*t*t*t - 2) + b;
+            }
+        },
+        Quint: {
+            easeIn: function(t,b,c,d){
+                return c*(t/=d)*t*t*t*t + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c*((t=t/d-1)*t*t*t*t + 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+                return c/2*((t-=2)*t*t*t*t + 2) + b;
+            }
+        },
+        Sine: {
+            easeIn: function(t,b,c,d){
+                return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c * Math.sin(t/d * (Math.PI/2)) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+            }
+        },
+        Expo: {
+            easeIn: function(t,b,c,d){
+                return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+            },
+            easeOut: function(t,b,c,d){
+                return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if (t==0) return b;
+                if (t==d) return b+c;
+                if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+                return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+            }
+        },
+        Circ: {
+            easeIn: function(t,b,c,d){
+                return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+            },
+            easeOut: function(t,b,c,d){
+                return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+            },
+            easeInOut: function(t,b,c,d){
+                if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+                return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+            }
+        },
+        Elastic: {
+            easeIn: function(t,b,c,d,a,p){
+                if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+                if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+                else var s = p/(2*Math.PI) * Math.asin (c/a);
+                return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+            },
+            easeOut: function(t,b,c,d,a,p){
+                if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+                if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+                else var s = p/(2*Math.PI) * Math.asin (c/a);
+                return (a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b);
+            },
+            easeInOut: function(t,b,c,d,a,p){
+                if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+                if (!a || a < Math.abs(c)) { a=c; var s=p/4; }
+                else var s = p/(2*Math.PI) * Math.asin (c/a);
+                if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+                return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+            }
+        },
+        Back: {
+            easeIn: function(t,b,c,d,s){
+                if (s == undefined) s = 1.70158;
+                return c*(t/=d)*t*((s+1)*t - s) + b;
+            },
+            easeOut: function(t,b,c,d,s){
+                if (s == undefined) s = 1.70158;
+                return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+            },
+            easeInOut: function(t,b,c,d,s){
+                if (s == undefined) s = 1.70158;
+                if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+                return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+            }
+        },
+        Bounce: {
+            easeIn: function(t,b,c,d){
+                return c - Tween.Bounce.easeOut(d-t, 0, c, d) + b;
+            },
+            easeOut: function(t,b,c,d){
+                if ((t/=d) < (1/2.75)) {
+                    return c*(7.5625*t*t) + b;
+                } else if (t < (2/2.75)) {
+                    return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+                } else if (t < (2.5/2.75)) {
+                    return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+                } else {
+                    return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+                }
+            },
+            easeInOut: function(t,b,c,d){
+                if (t < d/2) return Tween.Bounce.easeIn(t*2, 0, c, d) * .5 + b;
+                else return Tween.Bounce.easeOut(t*2-d, 0, c, d) * .5 + c*.5 + b;
+            }
+        }
+    }
+</script>
+
+<script>
+    canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+
+    var Ev = function( p ) {
+        p=p||{};
+        this.canvas = p.canvas || {};
+        this.context = this.canvas&&this.canvas.getContext("2d") || p.context || {};
+        var w_w=p&&p.window_width?p.window_width:"500";
+        var w_h=p&&p.window_height?p.window_height:"400";
+        var s_c=p&&p.star_count?p.star_count:"600";
+        var s_color=p&&p.star_color?p.star_color:"#FFF";
+        var s_d=p&&p.star_depth?p.star_depth:"250";
+        var dom=$(this.canvas);
+        var fov = parseInt(s_d);
+        var SCREEN_WIDTH = parseInt(w_w);
+        var SCREEN_HEIGHT = parseInt(w_h);
+        var HALF_WIDTH = SCREEN_WIDTH/2;
+        var HALF_HEIGHT = SCREEN_HEIGHT/2;
+        var c_id = dom.attr("id");
+        var numPoints = s_c;
+
+        function draw3Din2D(point3d)
+        {
+            x3d = point3d[0];
+            y3d = point3d[1];
+            z3d = point3d[2];
+            //scale就是
+            // z3d 在 -100 到 +300 之间;
+            var scale = fov/(fov+z3d);
+            var x2d = (x3d * scale) + HALF_WIDTH;
+            var y2d = (y3d * scale)  + HALF_HEIGHT;
+
+            c.lineCap = "round";
+            c.lineWidth= scale;
+            c.strokeStyle = s_color;
+            c.beginPath();
+            c.moveTo(x2d,y2d);
+            c.lineTo(x2d+1, y2d);
+            c.stroke();
+
+        }
+
+        var canvas = document.getElementById(c_id);
+        var c = canvas.getContext('2d');
+
+        var points = [];
+
+        function initPoints()
+        {
+            var width = dom.attr("width");
+            for (i=0; i<numPoints; i++)
+            {
+                point = [(Math.random()*width)-width/2, (Math.random()*width)-width/2 , (Math.random()*width)-width/2 ];
+                points.push(point);
+            }
+
+        }
+
+        function render()
+        {
+            for (i=0; i<numPoints; i++)
+            {
+                point3d = points[i];
+
+                z3d = point3d[2];
+                z3d-=4;
+                if(z3d<-fov) z3d +=400;
+                point3d[2] = z3d;
+
+
+                draw3Din2D(point3d);
+
+            };
+
+        };
+
+        initPoints();
+        return render;
+    };
+    //为行星添加改变阴影的方法, 用来继承;
+    var Shadow = function() {
+        this.shadow = 1;
+        this.dir = 1;
+    };
+    Shadow.prototype.changeShadow = function() {
+        if(this.dir===1) {
+            this.shadow++ > 20 ? this.dir = -1 : 0;
+        }else if(this.dir === -1){
+            this.shadow-- <=0 ? this.dir = 1 : 0;
+        };
+        return this;
+    };
+
+    var Air = function( opt ) {
+        this.canvas = opt.canvas || {};
+        this.context = this.canvas&&this.canvas.getContext("2d") || opt.context || {};
+        this.opera = new CommonControl;
+        this.width = 10;
+        this.height = 10;
+        this.x = this.canvas.width/2-this.width/2;
+        this.y = this.canvas.height-this.height;
+        this.bindEv();
+    };
+    Air.prototype = new Shadow();
+    Air.prototype.draw = function() {
+        this.context.save();
+        this.context.beginPath();
+        this.context.fillStyle = "#000";
+        this.changeShadow();
+        this.context.shadowBlur =  this.shadow;
+        this.context.shadowColor = "#9B59B6";
+        this.context.arc(this.x ,this.y , this.width, 0, 360, false);
+        //this.context.rect( this.x, this.y, this.width, this.height);
+        this.context.fill();
+        this.context.restore();
+    };
+    Air.prototype.bindEv = function() {
+        this.opera.run(function() {
+                this.x--;
+                this.x = this.x<0 ? 0 : (this.x> this.canvas.width-this.width) ? this.canvas.width-this.width : this.x;
+            }.bind(this),
+            function() {
+                this.y--;
+                this.y = this.y<0 ? 0 : (this.y>this.canvas.height-this.height) ? this.canvas.height-this.height : this.y;
+            }.bind(this),
+            function() {
+                this.x++;
+                this.x = this.x<0 ? 0 : (this.x> this.canvas.width-this.width) ? this.canvas.width-this.width : this.x;
+            }.bind(this),
+            function() {
+                this.y++;
+                this.y = this.y<0 ? 0 : (this.y>this.canvas.height-this.height) ? this.canvas.height-this.height : this.y;
+            }.bind(this),
+            this.draw.bind(this));
+    };
+
+    var Star = function(opt) {
+        this.canvas = opt.canvas || {};
+        this.context = this.canvas&&this.canvas.getContext("2d") || opt.context || {};
+        this.x = this.canvas.width/2;
+        this.y = this.canvas.height/2;
+        this.w = opt.w || 80;
+        this.time = 1;
+        this.img = opt.img;
+    };
+    Star.prototype =  new Shadow;
+    Star.prototype.draw = function () {
+        this.time++;
+
+        //画光晕
+        this.context.save();
+        this.context.arc(this.x, this.w*2+10, 70  ,0, 360, false);
+        this.context.closePath();
+        this.changeShadow();
+        //添加阴影
+        this.context.shadowBlur =  this.shadow;
+        this.context.shadowColor = "#E67E22";
+        /*
+         this.context.color = this.context.createRadialGradient(this.x,this.y,0,this.x,this.y, this.w);
+         //设置渐变效果
+         this.context.color.addColorStop(0,"#D35400");//渐变开始点和颜色
+         this.context.color.addColorStop(1,"#E67E22");//渐变结束点和颜色
+         */
+        this.context.fillStyle = "rgba(211, 107, 0, 0.02)";
+        this.context.fill();
+        this.context.restore();
+
+        //保存之前的画布内容
+        this.context.save();
+        //重置0,0坐标点
+        //this.context.translate(this.canvas.width/2, this.canvas.height/2);
+        //设置旋转角度 ，角度转换为弧度角;
+        //degrees*Math.PI/180
+        //this.context.rotate(this.time*Math.PI/180);
+        //画星球
+        this.context.beginPath();
+        //context.arc(x,y,r,sAngle,eAngle,counterclockwise);
+        //this.context.arc(this.x, this.w*2, this.w  ,0, 360, false);
+        //this.context.closePath();
+        //this.changeShadow();
+        //添加阴影
+        //this.context.shadowBlur =  this.shadow;
+        //this.context.shadowColor = "#E67E22";
+        //设置星球的填充颜色
+        //新建渐变对象
+        //context.createRadialGradient(x0,y0,r0,x1,y1,r1);
+        /*
+        this.context.color = this.context.createRadialGradient(this.x,this.y,0,this.x,this.y, this.w);
+        //设置渐变效果
+        this.context.color.addColorStop(0,"#D35400");//渐变开始点和颜色
+        this.context.color.addColorStop(1,"#E67E22");//渐变结束点和颜色
+        this.context.fillStyle = this.context.color;//将渐变对象复制给填充画笔
+        //填充星球
+        this.context.fill();
+        */
+        //debugger;
+        //画太阳
+        this.context.globalCompositeOperation = "lighter";
+        this.context.translate(this.x, this.w + 20);
+        //设置旋转角度 ，角度转换为弧度角;
+        //degrees*Math.PI/180
+        this.context.rotate(this.time*Math.PI/180);
+        this.context.translate(-(this.x), -(this.w-20));
+        this.context.drawImage(this.img, this.x-100,this.w-100, 200, 200);
+        //恢复之前保存的画布内容
+        this.context.restore();
+        //this.context.globalCompositeOperation = "destination-over";
+    };
+    var Enemy = function(opt) {
+        this.canvas = opt.canvas || {};
+        this.context = this.canvas&&this.canvas.getContext("2d") || opt.context || {};
+        this.h = opt.w || Math.floor( Math.random()*40 );
+        this.w = opt.h || this.h;
+        this.img = opt.img || "";
+        this.x = opt.x || Math.floor( Math.random()*this.canvas.width );
+        this.y = opt.y || this.canvas.height;
+
+        this.tween = (function() {
+            var tween = Tween[ ["Cubic" , "Quart", "Quint", "Sine", "Expo", "Bounce" , "Back", "Elastic", "Circ", "Linear", "Quad"][ Math.floor(Math.random()*11) ] ]
+            return typeof tween === "function" ? tween : tween [ ["easeInOut","easeIn","easeOut"][ Math.floor(Math.random()*3) ] ];
+        })();
+
+        this.middle = this.canvas.width/2;
+        //this.distance = Math.pow( Math.pow(this.middle-this.x,2) + Math.pow(this.y,2), 1/2);
+        this.distanceX = this.middle;
+        this.initX = this.x;
+        this.initY = this.y;
+        //this.shape = ["rect", "arc"][Math.floor( Math.random()*2 )];
+        this.targetY =  100;
+        this.time = (new Date).valueOf();
+        this.durationTime = 20000
+    };
+    Enemy.prototype = new Shadow();
+    Enemy.prototype.run = function () {
+
+    };
+    Enemy.prototype.draw = function () {
+        if( (new Date).valueOf()-this.time >this.durationTime) {
+            this.x=this.middle;
+        }else if(this.x<this.middle) {
+            this.x = this.initX + this.tween((new Date).valueOf() - this.time, 0, this.distanceX - this.initX, this.durationTime);
+        }else if(this.x>this.middle) {
+            this.x = this.initX - this.tween((new Date).valueOf()-this.time,0 ,this.initX - this.distanceX , this.durationTime);
+        };
+        if( (new Date).valueOf()-this.time >this.durationTime) {
+            this.y = this.targetY;
+        }else{
+            this.y = this.initY - this.tween((new Date).valueOf()-this.time,0 ,this.initY - this.targetY , this.durationTime);
+        };
+        this.context.save();
+        //this.context.beginPath();
+        //context.arc(x,y,r,sAngle,eAngle,counterclockwise);
+        //this.context.arc(this.x, this.y, this.w  ,0, 360, false);
+        //this.context.closePath();
+        //this.changeShadow();
+        //添加阴影
+        //this.context.shadowBlur =  this.shadow;
+        //this.context.shadowColor = "#2C3E50";
+        //this.context.fillStyle = "#34495E";
+        this.context.globalCompositeOperation = "lighter";
+        this.context.drawImage(this.img,this.x,this.y, this.w, this.w);
+        this.context.fill();
+        this.context.restore();
+        if(this.y < -this.h) {
+            //重新新建这个实例
+            var en = new Enemy({canvas : this.canvas});
+            this.w = en.w,this.h = en.h, this.x = en.x, this.y = en.y;
+            this.draw = en.draw;
+        }
+    };
+    //时间模块
+    var Time = function() {};
+    //背景模块;
+    var Background = function(opt) {
+        this.canvas = opt.canvas || {};
+        this.context = this.canvas&&this.canvas.getContext("2d") || opt.context || {};
+        this.time = 0;
+        this.img = opt.img;
+    };
+    Background.prototype.draw = function() {
+        this.time++;
+        this.context.drawImage(this.img ,0 , 0 , this.canvas.width, this.canvas.height );
+    };
+
+    var taskList = new TaskList();
+
+    $(function () {
+        var imgs = util.loadImgs(["./imgs/h-glaxy.png", "imgs/sun.jpg","imgs/planet0.jpg","imgs/planet1.jpg","imgs/planet2.jpg","imgs/mars.png","imgs/Mercury.png","imgs/Neptune.png","imgs/Uranu.png","imgs/Venus.png"], function( imgs ) {
+
+            canvas.width = document.documentElement.clientWidth;
+            canvas.height = document.documentElement.clientHeight;
+            var ev = new Ev({
+                canvas : canvas,
+                window_width: canvas.width,
+                window_height: '400',
+                window_background: '#00113F',
+                star_count: '1000',
+                star_color: '#fff',
+                star_depth: '100'
+            });
+            var air = new Air({canvas : canvas});
+            var star = new Star({canvas : canvas, w : 40, img : imgs["imgs/sun.jpg"]});
+            var background = new Background({canvas : canvas, img : imgs["./imgs/h-glaxy.png"]});
+            var ens = new Array();
+            function createEns (ens) {;
+                for(var i=0 ;i < 10; i++ ) {
+                    var img = ["imgs/planet0.jpg","imgs/planet1.jpg","imgs/planet2.jpg","imgs/mars.png","imgs/Mercury.png","imgs/Neptune.png","imgs/Uranu.png","imgs/Venus.png"][Math.floor(Math.random()*8)];
+                    ens.push( new Enemy({canvas : canvas, img : imgs[img]}) );
+                };
+                setTimeout( function() {
+                    createEns(ens);
+                }, 20000)
+            };
+            createEns(ens);
+            taskList.addTask(function() {
+                context.clearRect(0,0, canvas.width, canvas.height);
+            }).addTask( background.draw.bind(background) ).addTask( ev.bind(ev) ).addTask( air.draw.bind(air) ).addTask( star.draw.bind(star) ).addTask(function() {
+                var len = ens.length;
+                while(len--) {
+                    ens[len].draw.bind(ens[len])();
+                };
+            }).setInterval(30);
+
+        });
+
+            //BlackHole.blackHoleifyImage('canvas',"milkyway.jpg");
+    })
+</script>
+</body>
+</html>

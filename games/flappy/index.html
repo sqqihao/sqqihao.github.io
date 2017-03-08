@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="js/zepto.js"></script>
+    <script src="js/underscore1.8.js"></script>
+</head>
+<style>
+    body{
+        margin:0;
+    }
+    .levels{
+        position: fixed;
+        top:0;
+        left:0;
+    }
+    .levels .level{
+        cursor: pointer;
+        margin:10px;
+        padding:16px;
+        color:#fff;
+        background: rgba(41, 182, 255, 0.61);
+        border-radius:10px;
+    }
+</style>
+<body>
+    <canvas id="canvas" width="400" height="400">
+    </canvas>
+    <script>
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext('2d');
+        canvas.height = document.documentElement.clientHeight;
+        var util = {
+            isMobile : typeof document.ontouchstart ? true : false,
+            loadImgs: function(arr) {
+                for (var i = 0; i < arr.length; i++) {
+                    var img = new Image();
+                    img.onload = function () {
+                        console.log(this.src);
+                    }
+                    img.src = arr[i];
+                }
+            }
+        };
+        util.loadImgs( ["img/bird.png","img/pipe.png","img/pipe-down.png","img/pipe-up.png", "img/sky.png"] );
+
+        var Mode = function( level ) {
+            this.state = ["e", "n", "h"];
+            this.buttons = $("<div class='levels'>");
+            this.init();
+        };
+        $.extend(Mode.prototype, {
+            init : function() {
+                $.each(this.state, function(i, e) {
+                    this.buttons.append( $("<a class='level' onclick='GStart("+ i +")'>"+this.state[i]+"</a>") );
+                }.bind(this));
+                $("body").append( this.buttons );
+            }
+        });
+
+        var GStart = function( level ) {
+            // get mode
+            level;
+            //add Score;
+            var pipeList = [];
+            var s = new S({
+                ctx : context,
+                left : canvas.width/2,
+                top : 20
+            });
+
+            var b = new B({canvas : canvas, overFn : function() {
+                context.clearRect(0,0,canvas.width, canvas.height);
+            }});
+            b.fly();
+            b.setPipeList( pipeList );
+            window.onkeypress = function() {
+                b.jump();
+            };
+            if( util.isMobile ) {
+                document.body.ontouchstart = function() {
+                    b.jump();
+                };
+            };
+            this.runList = [
+                function() {
+                    context.clearRect(0,0,canvas.width, canvas.height);
+                },
+                function() {
+                    var skyImg = new Image();
+                    skyImg.src= "img/sky.png";
+                    context.drawImage(skyImg, 0, 0,canvas.width, canvas.height  );
+                },
+                s.draw.bind(s),
+                (function() {
+                    var pipe = new Pipe({canvas : canvas, x : 200, x1 : 200, score : s, level : level});
+                    return function() {
+                        if(pipe.x<-40) {
+                            pipe =new Pipe({canvas : canvas, score : s, level : level});
+                        }else{
+                            pipe.draw().moveLeft();
+                        };
+                        pipeList[0] = pipe;
+                    };
+                })(),
+                (function() {
+                    var pipe = new Pipe({canvas : canvas, x : 300, x1 : 300, score : s, level : level});
+                    return function() {
+                        if(pipe.x<-40) {
+                            pipe =new Pipe({canvas : canvas, score : s, level : level});
+                        }else{
+                            pipe.draw().moveLeft();
+                        };
+                        pipeList[1] = pipe;
+                    };
+                })(),
+                (function() {
+                    var pipe = new Pipe({canvas : canvas, x : 400, x1 : 400, score : s, level : level});
+                    return function() {
+                        if(pipe.x<-40) {
+                            pipe =new Pipe({canvas : canvas, score : s, level : level});
+                        }else{
+                            pipe.draw().moveLeft();
+                        };
+                        pipeList[2] = pipe;
+                    };
+                })(),
+                (function() {
+                    //554
+                    var pipe = new Pipe({canvas : canvas, x : 500, x1 : 500, score : s, level : level});
+                    return function() {
+                        if(pipe.x<-40) {
+                            pipe =new Pipe({canvas : canvas, score : s, level : level});
+                        }else{
+                            pipe.draw().moveLeft();
+                        };
+                        pipeList[3] = pipe;
+                    };
+                })(),
+                b.draw.bind(b)
+            ];
+            var timer = setInterval(function() {
+                for(var i=0; i<runList.length; i++) {
+                    if( typeof runList[i] === "function" ) {
+                        runList[i]();
+                    };
+                };
+                if(runList.length === 0 )clearInterval( timer );
+            },20);
+        };
+
+        var S = function( opt ) {
+            opt = opt || {};
+            this.ctx = opt.ctx;
+            this.left = opt.left;
+            this.top = opt.top;
+            this.score = opt.score || 0;
+        };
+        $.extend(S.prototype, {
+            draw : function() {
+
+                this.ctx.font="24px Georgia";
+                this.ctx.fillText(this.score, this.left, this.top);
+            },
+            addScore : function() {
+                this.score++;
+            }
+        });
+
+        var B = function( opt ) {
+            opt = opt || {};
+            this.canvas = opt.canvas || {};
+            this.context = opt.context || this.canvas.getContext("2d"),
+            this.img = (function() {
+                return $("<img>").attr("src",opt.img || "img/bird.png" )[0]
+            })();
+            this.r = opt.r || 0;
+            this.x = opt.x || 40;
+            this.y = opt.y || canvas.height/2;
+            this.w = opt.w || 20;
+            this.h = opt.h || 20;
+            this.overFn = opt.overFn || function() {};
+            this.speedY = 0;
+            this.jumpFlag = true;
+            this.swing = 0;
+            setInterval(function() {
+                this.swing++;
+                if(this.swing == 4 ) this.swing = 0;
+            }.bind(this),300);
+            this.pipeList = null;
+            this.setPipeList = function(pipeList) {
+                this.pipeList = pipeList;
+            }
+        };
+        $.extend(B.prototype , {
+            draw : function() {
+                    if(!this.collideTest()){
+                        window.runList = [];
+                        this.overFn();
+                    };
+                    this.context.drawImage( this.img , 0, (this.img.height/4)*this.swing, this.img.width,(this.img.height/4) , this.x, this.y, this.w, this.h);
+            },
+            collideTest : function() {
+                var offsetX = this.x+this.w;
+                var offsetY = this.y+this.h;
+                //如果有一个点在box里面就返回true;
+                function inBox(x, y, offsetX, offsetY, pipe) {
+                    if(y <0 || offsetY>this.canvas.height ) {
+                        return true;
+                    };
+                    if(x>pipe.x&&x<(pipe.x+pipe.w)&&y>pipe.y&&y<pipe.h  || x>pipe.x1&&x<(pipe.x1+pipe.w1)&&y>pipe.y1 )
+                        return true;
+                };
+                for(var i=0; i<this.pipeList.length; i++) {
+                    var pipe = this.pipeList[i];
+                    //分别检测8个，只要有一个碰到了，就返回false;
+                    if( inBox(this.x, this.y, offsetX, offsetY, pipe) ) {
+                        return false;
+                    };
+                };
+                return true;
+            },
+            jump : function() {
+                if(this.jumpFlag)
+                    this.speedY = -10;
+
+                this.jumpFlag = false;
+                setTimeout( function() {
+                    this.jumpFlag = true
+                }.bind(this), 600);
+            },
+            fly : function() {
+                this.flyer = setInterval(function(){
+                    this.speedY += 0.8;
+                    this.y += this.speedY;
+                }.bind(this),30);
+            }
+        });
+
+        var Pipe = function( opt ) {
+            opt = opt || {};
+            this.level = opt.level || 0;
+            var gapWidth = this.level == 2 ? 100 : this.level == 1 ? 150 : this.level == 0 ? 200 : 200;
+            var height = opt.canvas.height - gapWidth;
+            var img = document.createElement("img");
+            img.src="img/pipe.png";
+            this.img = opt.img || img;
+
+            this.canvas = opt.canvas;
+            this.context = opt.context || this.canvas.getContext("2d");
+            var pipeDownImg = document.createElement("img");
+            pipeDownImg.src = "img/pipe-down.png";
+            this.pipeDownImg = pipeDownImg;
+            this.x = opt.x || this.canvas.width-10;
+            this.y = opt.y || 0;
+            this.w = opt.w || 40;
+            var h = height*Math.random();
+            this.h = opt.h || ( h>this.canvas.height-100 ||  h<100) ? this.canvas.height-200 : h;
+
+            var pipeUpImg = document.createElement("img");
+            pipeUpImg.src = "img/pipe-up.png";
+            this.pipeUpImg = pipeUpImg;
+            this.x1 = opt.x1 || opt.x || this.canvas.width - 10;
+            this.y1 = opt.y1 || this.h+gapWidth;
+            this.w1 = opt.w1 || 40;
+            this.h1 = opt.w1 || height-this.h;
+
+            this.score = opt.score || {};
+        };
+        $.extend( Pipe.prototype , {
+            draw : function() {
+                //emulate draw rectangle;
+                this.context.drawImage(this.img, this.x, this.y, this.w, this.h);
+                this.context.drawImage(this.pipeDownImg, this.x, this.h-24, this.w, 24);
+
+                this.context.drawImage(this.img, this.x1, this.y1, this.w1, this.h1);
+                this.context.drawImage(this.pipeUpImg, this.x1, this.y1, this.w1, 24);
+                return this;
+            },
+            moveLeft : function () {
+                this.x--;
+                this.x1--;
+                if(this.score && this.x === 30) {
+                    this.score.addScore();
+                }
+            },
+            destory : function() {
+
+            },
+            onOver : function() {
+
+            }
+        });
+
+        mode = new Mode;
+    </script>
+</body>
+</html>

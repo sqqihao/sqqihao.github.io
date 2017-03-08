@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<canvas id="cvs"></canvas>
+<script>
+    var cvs = document.getElementById('cvs');
+    var ctx = cvs.getContext('2d');
+    function draw (color) {
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.moveTo(100,100);
+        ctx.bezierCurveTo(110,110,199,278,300,379);
+        ctx.lineTo(400,100)
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill()
+    }
+    draw();
+    cvs.onmousemove = function (e) {
+        var x = e.offsetX, y = e.offsetY;
+        if(ctx.isPointInPath(x,y)) {
+            console.log('in');
+            draw('#f00');
+        } else {
+            draw()
+        }
+    }
+</script>
+</body>
+</html>

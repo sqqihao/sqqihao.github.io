@@ -1,0 +1,16 @@
+@charset "utf-8";
+/* CSS Document #304C70 */
+html, body{
+	margin:0px; padding:0px; font-size:12px; background:#506DA9; color:#eee;
+	-moz-user-select: none; -khtml-user-select: none; user-select: none; line-height:24px;
+	cursor:url(images/link.cur), auto; font-family: "宋体", "Courier New"; overflow:hidden;
+}
+ul, li, ol{
+	padding:0px; margin:0px; list-style-type:none;
+}
+#content table .set{
+	background:url(images/boxbg.gif) no-repeat;
+}
+input, textarea{
+	font-family: "宋体", "Courier New";
+}

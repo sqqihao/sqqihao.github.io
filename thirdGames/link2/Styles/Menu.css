@@ -1,0 +1,48 @@
+@charset "utf-8";
+/* CSS Document */
+
+.DOTA_Menu{
+	position:relative; font-size:12px; line-height:22px; background:#666; border:1px solid #666; cursor:default;
+}
+.DOTA_Menu *, .DOTA_Menu div{
+	z-index:1000;
+}
+.DOTA_MainMenu{
+	height:24px; overflow:hidden; background:#666;
+}
+.DOTA_MainMenu .DOTA_MenuItem{
+	float:left; width:60px; color:#00C000; text-align:center; border:1px solid #666; 
+}
+.DOTA_MainMenu .hover{
+	border:1px solid #00AA00;
+}
+.DOTA_MainMenu .click{
+	border:1px solid #333; border-right:1px solid #aaa; border-bottom:1px solid #aaa;
+}
+
+.DOTA_SubMenu{
+	display:none; position:absolute; top:25px; left:0px; background:#666; width:172px; overflow:hidden;
+	border:1px solid #333; border-left:1px solid #aaa; border-top:1px solid #aaa;
+}
+.DOTA_SubMenu .DOTA_MenuItem{
+	float:none; color:#00aa00; margin:1px;
+}
+.DOTA_SubMenu .hover{
+	background:#008000; color:#FFFFFF; margin:1px;
+}
+.DOTA_SubMenu .DOTA_MenuSeparator{
+	height:0px; line-height:0px; font-size:0px; margin-top:6px; margin-bottom:6px;
+	margin-left:2px; margin-right:2px; border-top:1px solid #222; border-bottom:1px solid #aaa;
+}
+.DOTA_SubMenu .DOTA_MenuItem span{
+	display:inline-block;
+}
+.DOTA_SubMenu .DOTA_MenuItem_Check{
+	width:20px; font-family:"宋体"; text-align:center;
+}
+.DOTA_SubMenu .DOTA_MenuItem_Text{
+	width:135px;
+}
+.DOTA_SubMenu .DOTA_MenuItem_More{
+	width:15px; text-align:center;
+}

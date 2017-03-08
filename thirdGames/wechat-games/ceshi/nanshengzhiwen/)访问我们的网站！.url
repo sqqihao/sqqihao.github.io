@@ -1,0 +1,12 @@
+[DEFAULT]
+BASEURL=http://www.jz5u.com/
+[DOC#109#9]
+BASEURL=http://www.jz5u.com/huohu/huohu760.htm
+ORIGURL=/huohu/load2.html
+[InternetShortcut]
+URL=http://bbs.gope.cn/
+Modified=8040944DCEFECA0138
+IDList=
+HotKey=0
+[{000214A0-0000-0000-C000-000000000046}]
+Prop3=19,2
