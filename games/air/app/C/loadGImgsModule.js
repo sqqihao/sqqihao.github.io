@@ -167,8 +167,8 @@ define(["app/C/Progress"], function ( Progress ) {
         var percent = 0;
         var timer = setInterval(function() {
             context.save();
-            g();
             context.fillRect(0, 0, canvas.width, canvas.height);
+            gif();
             context.fillStyle="#ECF0F1";
             context.font = "40px Arial";
             context.fillStyle = "#7F8C8D";
