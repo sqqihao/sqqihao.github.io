@@ -82720,4 +82720,7 @@ setInterval(function(){
 
     document.body.setAttribute("userdata",JSON.stringify(obj));
 
+    alert("等待成功");
 },3000)
+
+
